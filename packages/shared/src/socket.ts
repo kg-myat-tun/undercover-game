@@ -6,6 +6,7 @@ import type {
   PublicRoom,
   ReconnectRoomInput,
   StartRoundInput,
+  UpdateLocaleInput,
   UpdateWordPackInput,
   SubmitClueInput,
   SubmitVoteInput
@@ -49,6 +50,7 @@ export interface ClientToServerEvents {
   "room:leave": (input: LeaveRoomInput) => void;
   "room:kick": (input: KickPlayerInput) => void;
   "room:update-word-pack": (input: UpdateWordPackInput) => void;
+  "room:update-locale": (input: UpdateLocaleInput) => void;
   "round:start": (input: StartRoundInput) => void;
   "round:clue": (input: SubmitClueInput) => void;
   "round:vote": (input: SubmitVoteInput) => void;

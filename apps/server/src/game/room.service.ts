@@ -13,6 +13,7 @@ import {
   type LeaveRoomInput,
   type PublicRoom,
   type ReconnectRoomInput,
+  type UpdateLocaleInput,
   type Role,
   type Room,
   type StartRoundInput,
@@ -53,6 +54,7 @@ export class RoomService {
       id: randomUUID(),
       code: roomCode,
       wordPackId: input.wordPackId ?? "classic",
+      locale: input.locale ?? "en",
       createdAt: now,
       players: [
         {
@@ -254,6 +256,23 @@ export class RoomService {
     }
 
     room.wordPackId = input.wordPackId;
+    await this.store.saveRoom(room);
+    return room;
+  }
+
+  async updateLocale(input: UpdateLocaleInput): Promise<Room> {
+    const room = await this.getRoomOrThrow(input.roomCode);
+    const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
+
+    if (!actor?.isHost) {
+      throw new RoomError("NOT_HOST", "Only the host can change the room language.");
+    }
+
+    if (room.round.phase !== "lobby" && room.round.phase !== "results") {
+      throw new RoomError("INVALID_PHASE", "Room language can only be changed between games.");
+    }
+
+    room.locale = input.locale;
     await this.store.saveRoom(room);
     return room;
   }

@@ -12,10 +12,12 @@ export const nicknameSchema = z.string().trim().min(2).max(18);
 export const playerSessionIdSchema = z.string().uuid();
 export const playerIdSchema = z.string().uuid();
 export const roomIdSchema = z.string().uuid();
+export const localeSchema = z.enum(["en", "my"]);
 
 export const createRoomInputSchema = z.object({
   nickname: nicknameSchema,
-  wordPackId: z.string().optional()
+  wordPackId: z.string().optional(),
+  locale: localeSchema.optional()
 });
 
 export const joinRoomInputSchema = z.object({
@@ -49,6 +51,12 @@ export const updateWordPackInputSchema = z.object({
   roomCode: roomCodeSchema,
   playerSessionId: playerSessionIdSchema,
   wordPackId: z.string().min(1)
+});
+
+export const updateLocaleInputSchema = z.object({
+  roomCode: roomCodeSchema,
+  playerSessionId: playerSessionIdSchema,
+  locale: localeSchema
 });
 
 export const submitClueInputSchema = z.object({
@@ -128,6 +136,7 @@ export const roomSchema = z.object({
   id: roomIdSchema,
   code: roomCodeSchema,
   wordPackId: z.string(),
+  locale: localeSchema,
   createdAt: z.number(),
   players: z.array(playerSchema).min(1).max(8),
   round: roundStateSchema,
@@ -158,8 +167,10 @@ export type LeaveRoomInput = z.infer<typeof leaveRoomInputSchema>;
 export type KickPlayerInput = z.infer<typeof kickPlayerInputSchema>;
 export type StartRoundInput = z.infer<typeof startRoundInputSchema>;
 export type UpdateWordPackInput = z.infer<typeof updateWordPackInputSchema>;
+export type UpdateLocaleInput = z.infer<typeof updateLocaleInputSchema>;
 export type SubmitClueInput = z.infer<typeof submitClueInputSchema>;
 export type SubmitVoteInput = z.infer<typeof submitVoteInputSchema>;
+export type AppLocale = z.infer<typeof localeSchema>;
 export type Player = z.infer<typeof playerSchema>;
 export type PublicPlayer = z.infer<typeof publicPlayerSchema>;
 export type ClueSubmission = z.infer<typeof clueSchema>;

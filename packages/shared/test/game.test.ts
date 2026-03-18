@@ -21,6 +21,7 @@ function makeRoom(): Room {
     id: "7e8a19d0-b93a-4976-a6dc-f9a7495b1f8e",
     code: "ABCD",
     wordPackId: "classic",
+    locale: "en",
     createdAt: Date.now(),
     players: [
       {

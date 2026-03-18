@@ -31,6 +31,7 @@ describe("RoomService", () => {
     const created = await service.createRoom({ nickname: "Host" });
 
     expect(created.room.wordPackId).toBe("classic");
+    expect(created.room.locale).toBe("en");
     expect(created.room.players).toHaveLength(1);
     expect(created.room.players[0]?.isHost).toBe(true);
   });
@@ -43,6 +44,16 @@ describe("RoomService", () => {
     });
 
     expect(created.room.wordPackId).toBe("family-fun");
+  });
+
+  it("uses a selected locale when creating a room", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({
+      nickname: "Host",
+      locale: "my",
+    });
+
+    expect(created.room.locale).toBe("my");
   });
 
   it("rejects duplicate nicknames", async () => {
@@ -226,6 +237,36 @@ describe("RoomService", () => {
       }),
     ).rejects.toMatchObject<Partial<RoomError>>({
       code: "INVALID_PHASE",
+    });
+  });
+
+  it("lets the host change the room locale between games", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({ nickname: "Host" });
+
+    const updated = await service.updateLocale({
+      roomCode: created.roomCode,
+      playerSessionId: created.playerSessionId,
+      locale: "my",
+    });
+
+    expect(updated.locale).toBe("my");
+  });
+
+  it("rejects room locale changes from non-host players", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({ nickname: "Host" });
+    await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
+    const joinedB = await service.joinRoom({ roomCode: created.roomCode, nickname: "Blair" });
+
+    await expect(
+      service.updateLocale({
+        roomCode: created.roomCode,
+        playerSessionId: joinedB.playerSessionId,
+        locale: "my",
+      }),
+    ).rejects.toMatchObject<Partial<RoomError>>({
+      code: "NOT_HOST",
     });
   });
 

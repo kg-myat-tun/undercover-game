@@ -95,7 +95,8 @@ describe("HomeClient", () => {
 
     const inputs = view.container.querySelectorAll("input");
     const createNameInput = inputs[0] as HTMLInputElement;
-    const packSelect = view.container.querySelector("select") as HTMLSelectElement;
+    const selects = view.container.querySelectorAll("select");
+    const packSelect = selects[1] as HTMLSelectElement;
     const createButton = [...view.container.querySelectorAll("button")].find((button) =>
       button.textContent?.includes("Create room"),
     ) as HTMLButtonElement;
@@ -108,6 +109,7 @@ describe("HomeClient", () => {
     expect(createCall?.args[0]).toEqual({
       nickname: "Jese",
       wordPackId: "hard-mode",
+      locale: "en",
     });
 
     view.cleanup();
@@ -144,7 +146,7 @@ describe("HomeClient", () => {
     await renderInto(view.root, <HomeClient />);
     await flushPromises();
 
-    const createNameInput = view.container.querySelector("input") as HTMLInputElement;
+    const createNameInput = view.container.querySelectorAll("input")[0] as HTMLInputElement;
     await changeValue(createNameInput, "Host");
 
     const createButton = [...view.container.querySelectorAll("button")].find((button) =>

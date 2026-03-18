@@ -1,6 +1,6 @@
 "use client";
 
-import type { PublicRoom, Role } from "@undercover/shared";
+import type { PublicRoom, Role, ServerErrorPayload } from "@undercover/shared";
 import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -8,6 +8,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Card } from "./card";
 import { serverUrl } from "../lib/config";
+import { formatPackLabel, t, translateError } from "../lib/i18n";
+import { getPreferredLocale, storePreferredLocale, type AppLocale } from "../lib/locale";
 import { clearStoredSession, getStoredSession } from "../lib/session";
 import { getSocket } from "../lib/socket";
 
@@ -22,6 +24,7 @@ type RoomClientProps = {
 
 export function RoomClient({ roomCode }: RoomClientProps) {
   const router = useRouter();
+  const [locale, setLocale] = useState<AppLocale>("en");
   const [room, setRoom] = useState<PublicRoom | null>(null);
   const [selfPlayerId, setSelfPlayerId] = useState<string | null>(null);
   const [roleState, setRoleState] = useState<RoleState>(null);
@@ -37,6 +40,14 @@ export function RoomClient({ roomCode }: RoomClientProps) {
   const previousPhaseRef = useRef<string | null>(null);
 
   useEffect(() => {
+    setLocale(getPreferredLocale());
+  }, []);
+
+  useEffect(() => {
+    storePreferredLocale(locale);
+  }, [locale]);
+
+  useEffect(() => {
     const socket = getSocket();
     const playerSessionId = getStoredSession(roomCode);
     socket.connect();
@@ -47,6 +58,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     }) => {
       setRoom(payload.room);
       setSelfPlayerId(payload.selfPlayerId);
+      setLocale(payload.room.locale);
       setReconnecting(false);
       setError(null);
     };
@@ -59,8 +71,8 @@ export function RoomClient({ roomCode }: RoomClientProps) {
       setRoleState({ role: payload.role, word: payload.word });
     };
 
-    const onError = (payload: { message: string }) => {
-      setError(payload.message);
+    const onError = (payload: Pick<ServerErrorPayload, "code" | "message">) => {
+      setError(translateError(locale, payload));
       setReconnecting(false);
     };
 
@@ -73,7 +85,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     } else {
       setReconnecting(false);
       setError(
-        "No local session found for this room. Join from the home screen to enter.",
+        t(locale, "noLocalSession"),
       );
     }
 
@@ -82,7 +94,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
       socket.off("room:role", onRole);
       socket.off("room:error", onError);
     };
-  }, [roomCode]);
+  }, [locale, roomCode]);
 
   useEffect(() => {
     const abortController = new AbortController();
@@ -161,9 +173,9 @@ export function RoomClient({ roomCode }: RoomClientProps) {
         count,
         label:
           key === "skip"
-            ? "Skip"
+            ? t(locale, "skip")
             : (room.players.find((player) => player.id === key)?.nickname ??
-              "Unknown player"),
+              t(locale, "unknownPlayer")),
       }))
       .sort((left, right) => {
         if (right.count !== left.count) {
@@ -179,9 +191,9 @@ export function RoomClient({ roomCode }: RoomClientProps) {
       <main className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-12">
         <Card className="w-full bg-white/92 p-4 text-center">
           <p className="text-sm uppercase tracking-[0.28em] text-ink/50">
-            Room {roomCode}
+            {t(locale, "room")} {roomCode}
           </p>
-          <h1 className="mt-4 text-3xl font-semibold">Reconnecting…</h1>
+          <h1 className="mt-4 text-3xl font-semibold">{t(locale, "reconnecting")}</h1>
         </Card>
       </main>
     );
@@ -192,17 +204,17 @@ export function RoomClient({ roomCode }: RoomClientProps) {
       <main className="mx-auto flex min-h-screen max-w-3xl items-center px-4 py-12">
         <Card className="w-full bg-white/92 p-4 text-center">
           <p className="text-sm uppercase tracking-[0.28em] text-ink/50">
-            Room {roomCode}
+            {t(locale, "room")} {roomCode}
           </p>
-          <h1 className="mt-4 text-3xl font-semibold">Session not active</h1>
+          <h1 className="mt-4 text-3xl font-semibold">{t(locale, "sessionNotActive")}</h1>
           <p className="mt-3 text-ink/65">
-            {error ?? "This room could not be restored."}
+            {error ?? t(locale, "roomCouldNotBeRestored")}
           </p>
           <Link
             className="mt-6 inline-flex rounded-2xl bg-ink px-4 py-3 font-semibold text-paper"
             href="/"
           >
-            Back home
+            {t(locale, "backHome")}
           </Link>
         </Card>
       </main>
@@ -219,7 +231,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
   );
   const myVoteLabel =
     myVote?.targetPlayerId === null
-      ? "Skipped"
+      ? t(locale, "skipped")
       : (room.players.find((player) => player.id === myVote?.targetPlayerId)
           ?.nickname ?? null);
   const visibleGameNumber =
@@ -238,13 +250,13 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     )?.nickname ?? null;
   const eliminatedPlayerName =
     room.players.find((player) => player.id === room.round.eliminatedPlayerId)
-      ?.nickname ?? "None";
+      ?.nickname ?? t(locale, "unknownPlayer");
   const eliminatedByNames = room.round.votes
     .filter((vote) => vote.targetPlayerId === room.round.eliminatedPlayerId)
     .map(
       (vote) =>
         room.players.find((player) => player.id === vote.voterId)?.nickname ??
-        "Unknown",
+        t(locale, "unknownPlayer"),
     )
     .join(", ");
   const skippedByNames = room.round.votes
@@ -252,7 +264,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     .map(
       (vote) =>
         room.players.find((player) => player.id === vote.voterId)?.nickname ??
-        "Unknown",
+        t(locale, "unknownPlayer"),
     )
     .join(", ");
 
@@ -301,6 +313,19 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     });
   };
 
+  const updateLocale = (nextLocale: AppLocale) => {
+    const sessionId = getStoredSession(roomCode);
+    if (!sessionId) {
+      return;
+    }
+
+    socket.emit("room:update-locale", {
+      roomCode,
+      playerSessionId: sessionId,
+      locale: nextLocale,
+    });
+  };
+
   const submitClue = () => {
     const sessionId = getStoredSession(roomCode);
     if (!sessionId || !clue.trim()) {
@@ -333,18 +358,18 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: "Join my Undercover room",
-          text: `Join room ${room.code} in Undercover.`,
+          title: `${t(locale, "join")} ${t(locale, "room")}`,
+          text: `${t(locale, "join")} ${t(locale, "room")} ${room.code}.`,
           url: inviteUrl,
         });
-        setInviteFeedback("Invite link shared.");
+        setInviteFeedback(t(locale, "inviteLinkShared"));
         return;
       }
 
       await navigator.clipboard.writeText(inviteUrl);
-      setInviteFeedback("Invite link copied.");
+      setInviteFeedback(t(locale, "inviteLinkCopied"));
     } catch {
-      setInviteFeedback("Could not share the invite link.");
+      setInviteFeedback(t(locale, "inviteLinkFailed"));
     }
   };
 
@@ -357,30 +382,34 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           >
             <div className="mx-auto flex max-w-4xl flex-col items-center text-center">
               <p className="verdict-title text-xs font-semibold text-white/55">
-                Voting Complete
+                {t(locale, "votingComplete")}
               </p>
               <div className="mt-4 h-px w-24 bg-white/20" />
               <div className="mt-6 flex flex-col items-center gap-4">
                 <p className="text-sm font-semibold uppercase tracking-[0.34em] text-white/48">
                   {room.round.eliminatedPlayerId
-                    ? "Elimination"
-                    : "No elimination"}
+                    ? t(locale, "elimination")
+                    : t(locale, "noElimination")}
                 </p>
                 <h2 className="verdict-wordmark text-4xl font-semibold md:text-6xl">
                   {room.round.eliminatedPlayerId
-                    ? `${eliminatedPlayerName} was eliminated`
-                    : "No one was eliminated"}
+                    ? t(locale, "playerWasEliminated", { player: eliminatedPlayerName })
+                    : t(locale, "noOneEliminated")}
                 </h2>
                 <p className="max-w-3xl text-base text-white/78 md:text-xl">
                   {room.round.eliminatedPlayerId
-                    ? `Votes cast by: ${eliminatedByNames || "No votes recorded"}`
-                    : `Skip votes cast by: ${skippedByNames || "No skip votes recorded"}`}
+                    ? t(locale, "votesCastBy", {
+                        players: eliminatedByNames || t(locale, "noVotesRecorded"),
+                      })
+                    : t(locale, "skipVotesCastBy", {
+                        players: skippedByNames || t(locale, "noSkipVotesRecorded"),
+                      })}
                 </p>
               </div>
               <div className="mt-6 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-semibold uppercase tracking-[0.24em] text-white/72">
                 {room.round.eliminatedPlayerId
-                  ? "Decision locked in"
-                  : "Round skipped"}
+                  ? t(locale, "decisionLockedIn")
+                  : t(locale, "roundSkipped")}
               </div>
             </div>
           </div>
@@ -390,31 +419,48 @@ export function RoomClient({ roomCode }: RoomClientProps) {
       <header className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.28em] text-ink/50">
-            <p>Room {room.code}</p>
+            <p>{t(locale, "room")} {room.code}</p>
             <span className="h-1 w-1 rounded-full bg-ink/25" />
-            <p>Game {visibleGameNumber}</p>
+            <p>{t(locale, "game")} {visibleGameNumber}</p>
             <span className="h-1 w-1 rounded-full bg-ink/25" />
-            <p>Round {visibleRoundNumber}</p>
+            <p>{t(locale, "round")} {visibleRoundNumber}</p>
           </div>
           <h1 className="mt-2 font-display text-4xl leading-none md:text-5xl">
-            Stay convincing
+            {t(locale, "stayConvincing")}
           </h1>
           <p className="mt-2 max-w-2xl text-base text-ink/70 md:text-lg">
-            Each clue narrows the room. Sound natural, but not too natural.
+            {t(locale, "roomSubtitle")}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <label className="flex items-center gap-2 rounded-xl border border-black/10 bg-white/75 px-3 py-2.5 text-sm font-medium text-ink/80">
+            <span>{t(locale, "language")}</span>
+            <select
+              value={room.locale}
+              onChange={(event) =>
+                updateLocale(event.target.value === "my" ? "my" : "en")
+              }
+              disabled={
+                !self.isHost ||
+                (room.round.phase !== "lobby" && room.round.phase !== "results")
+              }
+              className="bg-transparent outline-none disabled:opacity-60"
+            >
+              <option value="en">{t(locale, "english")}</option>
+              <option value="my">{t(locale, "myanmar")}</option>
+            </select>
+          </label>
           <button
             onClick={shareInvite}
             className="rounded-xl border border-black/10 bg-white/75 px-3 py-2.5 font-semibold"
           >
-            Invite players
+            {t(locale, "invitePlayers")}
           </button>
           <button
             onClick={leaveRoom}
             className="rounded-xl border border-black/10 px-3 py-2.5 font-semibold"
           >
-            Leave room
+            {t(locale, "leaveRoom")}
           </button>
           {self.isHost ? (
             <button
@@ -426,8 +472,8 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               className="rounded-xl bg-accent px-3 py-2.5 font-semibold text-white"
             >
               {room.round.phase === "results"
-                ? "Start next round"
-                : "Start round"}
+                ? t(locale, "startNextRound")
+                : t(locale, "startRound")}
             </button>
           ) : null}
         </div>
@@ -451,24 +497,24 @@ export function RoomClient({ roomCode }: RoomClientProps) {
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
-                  Your secret
+                  {t(locale, "yourSecret")}
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold md:text-3xl">
                   {roleState
                     ? roleState.word
                     : room.round.phase === "lobby"
-                      ? "Waiting for round start"
-                      : "Hidden"}
+                      ? t(locale, "waitingForRoundStart")
+                      : t(locale, "hidden")}
                 </h2>
                 <p className="mt-1 text-sm text-ink/65 md:text-base">
                   {roleState
-                    ? `Role: ${roleState.role === "undercover" ? "Undercover" : "Civilian"}`
-                    : "Your role appears here after the host starts the round."}
+                    ? `${t(locale, "role")}: ${roleState.role === "undercover" ? t(locale, "undercover") : t(locale, "civilian")}`
+                    : t(locale, "roleHint")}
                 </p>
               </div>
               <div className="rounded-2xl bg-sand/35 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
-                  Game
+                  {t(locale, "game")}
                 </p>
                 <p className="mt-1 text-lg font-semibold">
                   {visibleGameNumber}
@@ -476,7 +522,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               </div>
               <div className="rounded-2xl bg-sand/35 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
-                  Round
+                  {t(locale, "round")}
                 </p>
                 <p className="mt-1 text-lg font-semibold">
                   {visibleRoundNumber}
@@ -484,10 +530,16 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               </div>
               <div className="rounded-2xl bg-sand/35 px-4 py-3">
                 <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
-                  Phase
+                  {t(locale, "phase")}
                 </p>
                 <p className="mt-1 text-lg font-semibold capitalize">
-                  {room.round.phase.replace("-", " ")}
+                  {room.round.phase === "lobby"
+                    ? t(locale, "phaseLobby")
+                    : room.round.phase === "clue-entry"
+                      ? t(locale, "phaseClueEntry")
+                      : room.round.phase === "voting"
+                        ? t(locale, "phaseVoting")
+                        : t(locale, "phaseResults")}
                 </p>
               </div>
             </div>
@@ -496,18 +548,18 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           {room.round.phase === "lobby" ? (
             <Card className="bg-white/92 p-4">
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
-                Lobby
+                {t(locale, "lobby")}
               </p>
               <h2 className="mt-2 text-2xl font-semibold">
-                Gather your suspects
+                {t(locale, "gatherSuspects")}
               </h2>
               <p className="mt-2 text-ink/68">
-                The host can start once at least three players have joined.
+                {t(locale, "lobbyHint")}
               </p>
               <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <div>
                   <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ink/45">
-                    Word pack
+                    {t(locale, "wordPack")}
                   </p>
                   <select
                     value={room.wordPackId}
@@ -517,15 +569,15 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   >
                     {wordPacks.map((pack) => (
                       <option key={pack.id} value={pack.id}>
-                        {pack.name} • {pack.category} • {pack.pairCount} pairs
+                        {formatPackLabel(locale, pack)}
                       </option>
                     ))}
                   </select>
                 </div>
                 <div className="rounded-xl bg-black/[0.03] px-4 py-3 text-sm text-ink/68">
                   {self.isHost
-                    ? "Host can change pack before starting."
-                    : "Waiting for host to choose the pack."}
+                    ? t(locale, "hostCanChangePack")
+                    : t(locale, "waitingForHostPack")}
                 </div>
               </div>
             </Card>
@@ -535,15 +587,15 @@ export function RoomClient({ roomCode }: RoomClientProps) {
             <Card className="space-y-3 bg-white/92 p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
-                  Clues
+                  {t(locale, "clues")}
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold">
-                  {isMyTurn ? "Your turn to speak" : "Another player is up"}
+                  {isMyTurn ? t(locale, "yourTurnToSpeak") : t(locale, "anotherPlayerIsUp")}
                 </h2>
                 <p className="mt-2 text-sm text-ink/68 md:text-base">
                   {isMyTurn
-                    ? "Give one clue that fits your word without making it too obvious."
-                    : "Watch the clue list and wait for your turn."}
+                    ? t(locale, "clueTurnHint")
+                    : t(locale, "waitTurnHint")}
                 </p>
               </div>
 
@@ -579,7 +631,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   }}
                   disabled={!isMyTurn}
                   placeholder={
-                    isMyTurn ? "Enter your clue" : "Wait for your turn"
+                    isMyTurn ? t(locale, "enterYourClue") : t(locale, "waitForYourTurn")
                   }
                   className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-accent"
                 />
@@ -588,7 +640,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   disabled={!isMyTurn || clue.trim().length < 1}
                   className="rounded-xl bg-ink px-4 py-3 font-semibold text-paper"
                 >
-                  Submit clue
+                  {t(locale, "submitClue")}
                 </button>
               </div>
             </Card>
@@ -598,14 +650,13 @@ export function RoomClient({ roomCode }: RoomClientProps) {
             <Card className="space-y-3 bg-white/92 p-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
-                  Voting
+                  {t(locale, "voting")}
                 </p>
                 <h2 className="mt-1 text-2xl font-semibold">
-                  Who sounded off?
+                  {t(locale, "whoSoundedOff")}
                 </h2>
                 <p className="mt-2 text-sm text-ink/68 md:text-base">
-                  Choose one active player or skip. If skip gets the most votes,
-                  the room goes to another clue round.
+                  {t(locale, "votingHint")}
                 </p>
               </div>
 
@@ -614,16 +665,18 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   <div className="flex items-center justify-between gap-3">
                     <div>
                       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
-                        Vote progress
+                        {t(locale, "voteProgress")}
                       </p>
                       <p className="mt-1 text-xl font-semibold">
-                        {votersSubmittedCount}/
-                        {room.round.activePlayerIds.length} locked in
+                        {t(locale, "lockedIn", {
+                          submitted: votersSubmittedCount,
+                          total: room.round.activePlayerIds.length,
+                        })}
                       </p>
                     </div>
                     <div className="rounded-xl bg-black/[0.04] px-3 py-2 text-right">
                       <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
-                        Remaining
+                        {t(locale, "remaining")}
                       </p>
                       <p className="mt-1 text-lg font-semibold">
                         {votersRemainingCount}
@@ -642,21 +695,18 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
                   {myVote ? (
                     <p className="mt-3 text-sm text-ink/70">
-                      You already voted:{" "}
-                      <span className="font-semibold text-ink">
-                        {myVoteLabel}
-                      </span>
+                      {t(locale, "youAlreadyVoted", { choice: myVoteLabel ?? t(locale, "skip") })}
                     </p>
                   ) : (
                     <p className="mt-3 text-sm text-ink/70">
-                      Your vote is private until the round resolves.
+                      {t(locale, "votePrivate")}
                     </p>
                   )}
                 </div>
 
                 <div className="rounded-2xl border border-black/8 bg-black/[0.025] px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
-                    Room status
+                    {t(locale, "roomStatus")}
                   </p>
                   <div className="mt-2 space-y-2">
                     {activePlayers.map((player) => {
@@ -669,10 +719,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                           <div>
                             <p className="font-medium text-ink">
                               {player.nickname}{" "}
-                              {player.id === self.id ? "• You" : ""}
+                              {player.id === self.id ? `• ${t(locale, "you")}` : ""}
                             </p>
                             <p className="text-sm text-ink/50">
-                              {vote ? "Vote submitted" : "Choosing now"}
+                              {vote ? t(locale, "voteSubmitted") : t(locale, "choosingNow")}
                             </p>
                           </div>
                           <span
@@ -682,7 +732,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                                 : "bg-sand/35 text-ink/65"
                             }`}
                           >
-                            {vote ? "Done" : "Waiting"}
+                            {vote ? t(locale, "done") : t(locale, "waiting")}
                           </span>
                         </div>
                       );
@@ -699,7 +749,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                       : "border-black/10 bg-white"
                   }`}
                 >
-                  <span className="font-medium">Skip this vote</span>
+                  <span className="font-medium">{t(locale, "skipThisVote")}</span>
                   <input
                     type="radio"
                     name="vote"
@@ -721,7 +771,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                       <span className="font-medium">{player.nickname}</span>
                       {votesByVoterId.has(player.id) ? (
                         <p className="mt-1 text-sm text-ink/45">
-                          Already voted
+                          {t(locale, "alreadyVoted")}
                         </p>
                       ) : null}
                     </div>
@@ -741,7 +791,11 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 disabled={Boolean(myVote)}
                 className="rounded-xl bg-accent px-4 py-3 font-semibold text-white"
               >
-                {myVote ? `Vote submitted • ${myVoteLabel}` : "Submit vote"}
+                {myVote
+                  ? t(locale, "voteSubmittedCompact", {
+                      choice: myVoteLabel ?? t(locale, "skip"),
+                    })
+                  : t(locale, "submitVote")}
               </button>
             </Card>
           ) : null}
@@ -750,58 +804,58 @@ export function RoomClient({ roomCode }: RoomClientProps) {
             <Card className="space-y-3 bg-white/92 p-4">
               <div className="result-stage rounded-[22px] px-4 py-4 text-paper">
                 <p className="text-xs font-semibold uppercase tracking-[0.28em] text-paper/60">
-                  Round Result
+                  {t(locale, "roundResult")}
                 </p>
                 <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
                     <h2 className="text-2xl font-semibold text-paper">
-                      Round {visibleRoundNumber}
+                      {t(locale, "round")} {visibleRoundNumber}
                     </h2>
                     <p className="mt-2 text-3xl font-semibold text-white md:text-4xl">
                       {room.round.outcome?.winner === "civilians"
-                        ? "Civilians win"
-                        : "Undercover wins"}
+                        ? t(locale, "civiliansWin")
+                        : t(locale, "undercoverWins")}
                     </p>
                   </div>
                   <div className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold uppercase tracking-[0.24em] text-paper/78">
-                    Game {visibleGameNumber}
+                    {t(locale, "game")} {visibleGameNumber}
                   </div>
                 </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="rounded-2xl border border-white/10 bg-white/7 px-4 py-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-paper/55">
-                      Undercover
+                      {t(locale, "undercover")}
                     </p>
                     <p className="mt-1 text-2xl font-semibold text-white">
-                      {revealedUndercoverName ?? "Hidden"}
+                      {revealedUndercoverName ?? t(locale, "hidden")}
                     </p>
                     <p className="mt-1 text-sm text-paper/66">
-                      Identity revealed after the game ends.
+                      {t(locale, "identityReveal")}
                     </p>
                   </div>
                   <div className="eliminated-reveal relative overflow-hidden rounded-2xl border border-accent/30 bg-[#301f1c] px-4 py-3">
                     <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f5b8ab]">
-                      Eliminated
+                      {t(locale, "eliminated")}
                     </p>
                     <p className="mt-1 text-3xl font-semibold text-white">
                       {eliminatedPlayerName}
                     </p>
                     <p className="mt-1 text-sm text-[#f5d8d1]">
-                      Voted out in the deciding reveal.
+                      {t(locale, "votedOutReveal")}
                     </p>
                   </div>
                 </div>
 
                 <p className="mt-4 text-sm text-paper/72">
                   {room.round.outcome?.winner === "civilians"
-                    ? "Civilians win"
-                    : "Undercover wins"}
+                    ? t(locale, "civiliansWin")
+                    : t(locale, "undercoverWins")}
                   {room.round.outcome?.reason === "vote-skipped"
-                    ? " The room chose to skip, so nobody was eliminated and another clue round started."
+                    ? ` ${t(locale, "skipResultReason")}`
                     : revealedUndercoverName
-                      ? ` ${revealedUndercoverName} was the Undercover. Votes are now revealed for the completed round.`
-                      : " Votes are now revealed for the completed round."}
+                      ? ` ${t(locale, "revealResultReason", { undercover: revealedUndercoverName })}`
+                      : ` ${t(locale, "revealResultFallback")}`}
                 </p>
               </div>
 
@@ -809,10 +863,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-accent/20 bg-accent/8 px-4 py-3">
                   <div>
                     <p className="text-sm font-semibold text-ink">
-                      Ready for another match?
+                      {t(locale, "readyForAnotherMatch")}
                     </p>
                     <p className="text-sm text-ink/62">
-                      Start a fresh round with the same room.
+                      {t(locale, "restartHint")}
                     </p>
                   </div>
                   <button
@@ -820,7 +874,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                     disabled={room.players.length < 3}
                     className="rounded-xl bg-accent px-4 py-2.5 font-semibold text-white"
                   >
-                    Restart game
+                    {t(locale, "restartGame")}
                   </button>
                 </div>
               ) : null}
@@ -828,7 +882,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-2xl border border-black/8 bg-black/[0.025] px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
-                    Vote tally
+                    {t(locale, "voteTally")}
                   </p>
                   <div className="mt-2 grid gap-2">
                     {voteTallies.map((entry) => (
@@ -839,7 +893,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                         <div className="flex items-center justify-between gap-3">
                           <p className="font-medium text-ink">{entry.label}</p>
                           <span className="rounded-full bg-accent/12 px-3 py-1 text-sm font-semibold text-ink">
-                            {entry.count} vote{entry.count === 1 ? "" : "s"}
+                            {t(locale, "voteCount", {
+                              count: entry.count,
+                              suffix: locale === "en" && entry.count !== 1 ? "s" : "",
+                            })}
                           </span>
                         </div>
                       </div>
@@ -849,7 +906,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
                 <div className="rounded-2xl border border-black/8 bg-white px-4 py-3">
                   <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
-                    Who voted for whom
+                    {t(locale, "whoVotedForWhom")}
                   </p>
                   <div className="mt-2 space-y-2">
                     {room.round.votes.map((vote) => {
@@ -858,10 +915,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                       );
                       const target =
                         vote.targetPlayerId === null
-                          ? "Skip"
+                          ? t(locale, "skip")
                           : (room.players.find(
                               (player) => player.id === vote.targetPlayerId,
-                            )?.nickname ?? "Unknown player");
+                            )?.nickname ?? t(locale, "unknownPlayer"));
 
                       return (
                         <div
@@ -870,10 +927,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                         >
                           <div>
                             <p className="font-medium text-ink">
-                              {voter?.nickname ?? "Unknown player"}
+                              {voter?.nickname ?? t(locale, "unknownPlayer")}
                             </p>
                             <p className="text-sm text-ink/48">
-                              Final vote submitted
+                              {t(locale, "finalVoteSubmitted")}
                             </p>
                           </div>
                           <span className="rounded-full bg-sand/35 px-3 py-1 text-sm font-semibold text-ink">
@@ -906,7 +963,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
         <div className="grid gap-4">
           <Card className="bg-white/92 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
-              Players
+              {t(locale, "players")}
             </p>
             <div className="mt-3 grid gap-2">
               {room.players.map((player) => (
@@ -917,9 +974,9 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   <div>
                     <p className="font-medium">{player.nickname}</p>
                     <p className="text-sm text-ink/45">
-                      {player.isHost ? "Host" : "Player"}{" "}
+                      {player.isHost ? t(locale, "host") : t(locale, "player")}{" "}
                       {player.id === room.round.currentTurnPlayerId
-                        ? "• Current turn"
+                        ? `• ${t(locale, "currentTurn")}`
                         : ""}
                     </p>
                   </div>
@@ -931,7 +988,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                         onClick={() => kickPlayer(player.id)}
                         className="rounded-lg border border-black/10 px-3 py-1.5 text-sm font-semibold"
                       >
-                        Remove
+                        {t(locale, "remove")}
                       </button>
                     ) : null}
                     <span
@@ -945,14 +1002,12 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
           <Card className="bg-white/92 p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
-              Round notes
+              {t(locale, "roundNotes")}
             </p>
             <ul className="mt-3 space-y-2 text-sm text-ink/68 md:text-base">
-              <li>Everyone hears all clues before voting opens.</li>
-              <li>
-                The server decides turn order, vote results, and win conditions.
-              </li>
-              <li>Reconnect uses your saved room session on this device.</li>
+              <li>{t(locale, "note1")}</li>
+              <li>{t(locale, "note2")}</li>
+              <li>{t(locale, "note3")}</li>
             </ul>
           </Card>
         </div>

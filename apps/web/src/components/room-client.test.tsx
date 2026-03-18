@@ -72,6 +72,7 @@ function makeRoom(overrides: Partial<PublicRoom> = {}): PublicRoom {
     id: "room-id",
     code: "ABCD",
     wordPackId: "classic",
+    locale: "en",
     createdAt: 1,
     players: [
       {
@@ -304,7 +305,8 @@ describe("RoomClient", () => {
     }));
     await flushPromises();
 
-    const select = view.container.querySelector("select") as HTMLSelectElement;
+    const selects = view.container.querySelectorAll("select");
+    const select = selects[1] as HTMLSelectElement;
     await changeValue(select, "hard-mode");
 
     const updateCall = mockSocket.emitted.find(
@@ -314,6 +316,34 @@ describe("RoomClient", () => {
       roomCode: "ABCD",
       playerSessionId: "session-host",
       wordPackId: "hard-mode",
+    });
+
+    view.cleanup();
+  });
+
+  it("lets the host change the room language in the lobby", async () => {
+    const view = createContainer();
+
+    await renderInto(view.root, <RoomClient roomCode="ABCD" />);
+    await flushPromises();
+
+    await runInAct(() => mockSocket.trigger("room:snapshot", {
+      room: makeRoom(),
+      selfPlayerId: "p1",
+    }));
+    await flushPromises();
+
+    const selects = view.container.querySelectorAll("select");
+    const localeSelect = selects[0] as HTMLSelectElement;
+    await changeValue(localeSelect, "my");
+
+    const updateCall = mockSocket.emitted.find(
+      (call) => call.event === "room:update-locale",
+    );
+    expect(updateCall?.args[0]).toEqual({
+      roomCode: "ABCD",
+      playerSessionId: "session-host",
+      locale: "my",
     });
 
     view.cleanup();
