@@ -67,6 +67,7 @@ function makeRoom(): Room {
     ],
     round: createEmptyRound(),
     scoreboard: {},
+    undercoverHistory: [],
   }
 }
 
@@ -165,6 +166,51 @@ describe("game engine", () => {
     expect(nextRound.gameNumber).toBe(5)
     expect(nextRound.roundNumber).toBe(1)
     expect(nextRound.phase).toBe("clue-entry")
+  })
+
+  it("allows a repeat in a 3-player room, but blocks a third straight undercover", () => {
+    const room = makeRoom()
+    room.players = room.players.slice(0, 3)
+    const assignments = [] as string[]
+
+    for (let matchIndex = 0; matchIndex < 3; matchIndex += 1) {
+      const round = createRound(room, () => 0)
+      assignments.push(round.undercoverPlayerId ?? "")
+      room.round = {
+        ...round,
+        phase: "results",
+      }
+    }
+
+    expect(assignments[0]).toBe(assignments[1])
+    expect(assignments[2]).not.toBe(assignments[1])
+  })
+
+  it("raises the consecutive undercover cap when more players are in the room", () => {
+    const room = makeRoom()
+    room.players.push({
+      id: "55555555-5555-4555-8555-555555555555",
+      sessionId: "55555555-5555-4555-8555-555555555556",
+      nickname: "Emery",
+      isHost: false,
+      isConnected: true,
+      joinedAt: 5,
+      eliminatedAt: null,
+    })
+    const assignments = [] as string[]
+
+    for (let matchIndex = 0; matchIndex < 4; matchIndex += 1) {
+      const round = createRound(room, () => 0)
+      assignments.push(round.undercoverPlayerId ?? "")
+      room.round = {
+        ...round,
+        phase: "results",
+      }
+    }
+
+    expect(assignments[0]).toBe(assignments[1])
+    expect(assignments[1]).toBe(assignments[2])
+    expect(assignments[3]).not.toBe(assignments[2])
   })
 
   it("falls back cleanly when older room state has no game number", () => {

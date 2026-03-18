@@ -33,8 +33,13 @@ export function getActivePlayers(room: Room): Player[] {
 
 export function toPublicRoom(room: Room): PublicRoom {
   return {
-    ...room,
+    id: room.id,
+    code: room.code,
+    wordPackId: room.wordPackId,
+    locale: room.locale,
+    createdAt: room.createdAt,
     players: room.players.map(({ sessionId: _sessionId, ...player }) => player),
+    scoreboard: room.scoreboard,
     round: {
       gameNumber: safeCounter(room.round.gameNumber, 1),
       roundNumber: safeCounter(room.round.roundNumber, 1),

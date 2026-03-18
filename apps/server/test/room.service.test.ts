@@ -58,6 +58,7 @@ describe("RoomService", () => {
     expect(created.room.locale).toBe("en")
     expect(created.room.players).toHaveLength(1)
     expect(created.room.players[0]?.isHost).toBe(true)
+    expect(created.room.undercoverHistory).toEqual([])
   })
 
   it("uses a selected word pack when creating a room", async () => {

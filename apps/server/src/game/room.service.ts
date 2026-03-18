@@ -75,6 +75,7 @@ export class RoomService {
       ],
       round: createEmptyRound(),
       scoreboard: {},
+      undercoverHistory: [],
     }
 
     await this.store.saveRoom(room)
@@ -212,7 +213,8 @@ export class RoomService {
       throw new RoomError("PLAYER_NOT_FOUND", "That player is no longer in the room.")
     }
 
-    this.removePlayerFromCurrentRound(room, room.players[targetIndex].id)
+    const targetPlayerId = room.players[targetIndex].id
+    this.removePlayerFromCurrentRound(room, targetPlayerId)
     room.players.splice(targetIndex, 1)
     this.reassignHost(room)
     await this.store.saveRoom(room)

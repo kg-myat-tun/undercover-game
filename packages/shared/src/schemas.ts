@@ -147,6 +147,7 @@ export const roomSchema = z.object({
   players: z.array(playerSchema).min(1).max(8),
   round: roundStateSchema,
   scoreboard: scoreBoardSchema,
+  undercoverHistory: z.array(playerIdSchema),
 })
 
 export const publicRoundStateSchema = roundStateSchema
@@ -159,10 +160,14 @@ export const publicRoundStateSchema = roundStateSchema
     revealedUndercoverPlayerId: playerIdSchema.nullable(),
   })
 
-export const publicRoomSchema = roomSchema.extend({
-  players: z.array(publicPlayerSchema).min(1).max(8),
-  round: publicRoundStateSchema,
-})
+export const publicRoomSchema = roomSchema
+  .omit({
+    undercoverHistory: true,
+  })
+  .extend({
+    players: z.array(publicPlayerSchema).min(1).max(8),
+    round: publicRoundStateSchema,
+  })
 
 export const roomSummarySchema = publicRoomSchema.omit({
   id: true,
