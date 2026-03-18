@@ -75,8 +75,8 @@ beforeEach(() => {
     "fetch",
     vi.fn().mockResolvedValue({
       json: async () => [
-        { id: "classic", name: "Classic", category: "General", pairCount: 100 },
-        { id: "hard-mode", name: "Hard Mode", category: "Advanced", pairCount: 100 },
+        { id: "classic", name: "Classic", category: "General", pairCount: 100, availableLocales: ["en", "my"] },
+        { id: "hard-mode", name: "Hard Mode", category: "Advanced", pairCount: 100, availableLocales: ["en"] },
       ],
     }),
   );

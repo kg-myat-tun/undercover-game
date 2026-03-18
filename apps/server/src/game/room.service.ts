@@ -4,6 +4,9 @@ import {
   createRound,
   finalizeRound,
   getRoleForPlayer,
+  getDefaultWordPackId,
+  isWordPackAvailableInLocale,
+  normalizeWordPackId,
   submitClue,
   submitVote,
   toPublicRoom,
@@ -53,7 +56,12 @@ export class RoomService {
     const room: Room = {
       id: randomUUID(),
       code: roomCode,
-      wordPackId: input.wordPackId ?? "classic",
+      wordPackId: normalizeWordPackId(
+        input.wordPackId &&
+          isWordPackAvailableInLocale(input.wordPackId, input.locale ?? "en")
+          ? input.wordPackId
+          : getDefaultWordPackId(input.locale ?? "en")
+      ),
       locale: input.locale ?? "en",
       createdAt: now,
       players: [
@@ -255,7 +263,11 @@ export class RoomService {
       throw new RoomError("INVALID_PHASE", "Word packs can only be changed between games.");
     }
 
-    room.wordPackId = input.wordPackId;
+    if (!isWordPackAvailableInLocale(input.wordPackId, room.locale)) {
+      throw new RoomError("BAD_REQUEST", "That word pack is not available in this room language.");
+    }
+
+    room.wordPackId = normalizeWordPackId(input.wordPackId);
     await this.store.saveRoom(room);
     return room;
   }
@@ -273,6 +285,10 @@ export class RoomService {
     }
 
     room.locale = input.locale;
+    if (!isWordPackAvailableInLocale(room.wordPackId, input.locale)) {
+      room.wordPackId = getDefaultWordPackId(input.locale);
+    }
+
     await this.store.saveRoom(room);
     return room;
   }

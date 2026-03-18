@@ -7,6 +7,9 @@ import {
   determineOutcome,
   finalizeRound,
   getActivePlayers,
+  getWordPack,
+  isWordPackAvailableInLocale,
+  normalizeWordPackId,
   getRoleForPlayer,
   resolveVotes,
   shufflePlayers,
@@ -107,6 +110,46 @@ describe("game engine", () => {
     expect(round.civilianWord).toBeTruthy();
     expect(round.undercoverWord).toBeTruthy();
     expect(round.civilianWord).not.toBe(round.undercoverWord);
+  });
+
+  it("falls back to Myanmar gameplay words when the room locale is Myanmar", () => {
+    const room = makeRoom();
+    room.locale = "my";
+    room.wordPackId = "tech-media";
+
+    const round = createRound(room, () => 0.1);
+
+    expect(round.civilianWord).toBeTruthy();
+    expect(round.undercoverWord).toBeTruthy();
+    expect(/[က-႟]/u.test(round.civilianWord ?? "")).toBe(true);
+    expect(/[က-႟]/u.test(round.undercoverWord ?? "")).toBe(true);
+  });
+
+  it("maps the legacy myanmar-classic pack id to classic", () => {
+    expect(normalizeWordPackId("myanmar-classic")).toBe("classic");
+    expect(getWordPack("myanmar-classic", "my").id).toBe("classic");
+  });
+
+  it("reports locale availability for pack variants", () => {
+    expect(isWordPackAvailableInLocale("classic", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("food-drink", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("city-life", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("home-daily", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("travel-nature", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("sports-hobbies", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("school-work", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("tech-media", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("hard-mode", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("family-fun", "my")).toBe(true);
+    expect(isWordPackAvailableInLocale("tech-media", "en")).toBe(true);
+  });
+
+  it("keeps a supported Myanmar pack instead of falling back to classic", () => {
+    const pack = getWordPack("food-drink", "my");
+
+    expect(pack.id).toBe("food-drink");
+    expect(pack.locale).toBe("my");
+    expect(/[က-႟]/u.test(pack.pairs[0]?.civilian ?? "")).toBe(true);
   });
 
   it("starts a new game after results and resets the round number", () => {

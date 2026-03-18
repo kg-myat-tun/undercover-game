@@ -2,6 +2,7 @@
 
 import type { PublicRoom, Role, ServerErrorPayload } from "@undercover/shared";
 import React from "react";
+import clsx from "clsx";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -35,7 +36,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
   const [inviteFeedback, setInviteFeedback] = useState<string | null>(null);
   const [showVerdictReveal, setShowVerdictReveal] = useState(false);
   const [wordPacks, setWordPacks] = useState<
-    Array<{ id: string; name: string; category: string; pairCount: number }>
+    Array<{ id: string; name: string; category: string; pairCount: number; availableLocales: string[] }>
   >([]);
   const previousPhaseRef = useRef<string | null>(null);
 
@@ -184,7 +185,12 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
         return left.label.localeCompare(right.label);
       });
-  }, [room]);
+  }, [room, locale]);
+
+  const visibleWordPacks = useMemo(
+    () => wordPacks.filter((pack) => pack.availableLocales.includes(locale)),
+    [locale, wordPacks],
+  );
 
   if (reconnecting) {
     return (
@@ -222,6 +228,15 @@ export function RoomClient({ roomCode }: RoomClientProps) {
   }
 
   const socket = getSocket();
+  const isMyanmar = locale === "my";
+  const sectionLabelClass = clsx(
+    "text-xs font-semibold text-ink/50",
+    isMyanmar ? "tracking-[0.04em]" : "uppercase tracking-[0.28em]",
+  );
+  const compactLabelClass = clsx(
+    "text-xs text-ink/45",
+    isMyanmar ? "tracking-[0.03em]" : "uppercase tracking-[0.28em]",
+  );
   const isMyTurn = room.round.currentTurnPlayerId === self.id;
   const myVote = votesByVoterId.get(self.id);
   const votersSubmittedCount = room.round.votes.length;
@@ -374,7 +389,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
   };
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6">
+    <main className={clsx("mx-auto flex min-h-screen max-w-7xl flex-col gap-4 px-4 py-6", isMyanmar && "lang-my")}>
       {showVerdictReveal && room.round.phase === "results" ? (
         <div className="verdict-overlay">
           <div
@@ -386,17 +401,29 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               </p>
               <div className="mt-4 h-px w-24 bg-white/20" />
               <div className="mt-6 flex flex-col items-center gap-4">
-                <p className="text-sm font-semibold uppercase tracking-[0.34em] text-white/48">
+                <p
+                  className={clsx(
+                    "text-sm font-semibold text-white/48",
+                    isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.34em]",
+                  )}
+                >
                   {room.round.eliminatedPlayerId
                     ? t(locale, "elimination")
                     : t(locale, "noElimination")}
                 </p>
-                <h2 className="verdict-wordmark text-4xl font-semibold md:text-6xl">
+                <h2
+                  className={clsx(
+                    "verdict-wordmark font-semibold",
+                    isMyanmar
+                      ? "text-3xl leading-[1.25] md:text-5xl"
+                      : "text-4xl md:text-6xl",
+                  )}
+                >
                   {room.round.eliminatedPlayerId
                     ? t(locale, "playerWasEliminated", { player: eliminatedPlayerName })
                     : t(locale, "noOneEliminated")}
                 </h2>
-                <p className="max-w-3xl text-base text-white/78 md:text-xl">
+                <p className={clsx("max-w-3xl text-white/78", isMyanmar ? "text-lg leading-9 md:text-xl" : "text-base md:text-xl")}>
                   {room.round.eliminatedPlayerId
                     ? t(locale, "votesCastBy", {
                         players: eliminatedByNames || t(locale, "noVotesRecorded"),
@@ -406,7 +433,12 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                       })}
                 </p>
               </div>
-              <div className="mt-6 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-semibold uppercase tracking-[0.24em] text-white/72">
+              <div
+                className={clsx(
+                  "mt-6 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-semibold text-white/72",
+                  isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.24em]",
+                )}
+              >
                 {room.round.eliminatedPlayerId
                   ? t(locale, "decisionLockedIn")
                   : t(locale, "roundSkipped")}
@@ -416,24 +448,41 @@ export function RoomClient({ roomCode }: RoomClientProps) {
         </div>
       ) : null}
 
-      <header className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2 text-xs uppercase tracking-[0.28em] text-ink/50">
+      <header className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+        <div className="max-w-3xl">
+          <div
+            className={clsx(
+              "flex flex-wrap items-center gap-2 text-xs text-ink/50",
+              isMyanmar ? "tracking-[0.04em]" : "uppercase tracking-[0.28em]",
+            )}
+          >
             <p>{t(locale, "room")} {room.code}</p>
             <span className="h-1 w-1 rounded-full bg-ink/25" />
             <p>{t(locale, "game")} {visibleGameNumber}</p>
             <span className="h-1 w-1 rounded-full bg-ink/25" />
             <p>{t(locale, "round")} {visibleRoundNumber}</p>
           </div>
-          <h1 className="mt-2 font-display text-4xl leading-none md:text-5xl">
+          <h1
+            className={clsx(
+              "mt-2 text-ink",
+              isMyanmar
+                ? "text-[1.45rem] font-semibold leading-[1.4] md:text-[1.75rem]"
+                : "font-display text-4xl leading-none md:text-5xl",
+            )}
+          >
             {t(locale, "stayConvincing")}
           </h1>
-          <p className="mt-2 max-w-2xl text-base text-ink/70 md:text-lg">
+          <p
+            className={clsx(
+              "mt-2 max-w-2xl text-ink/70",
+              isMyanmar ? "text-[0.98rem] leading-8" : "text-base md:text-lg",
+            )}
+          >
             {t(locale, "roomSubtitle")}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <label className="flex items-center gap-2 rounded-xl border border-black/10 bg-white/75 px-3 py-2.5 text-sm font-medium text-ink/80">
+        <div className="flex flex-wrap items-start gap-2 xl:max-w-[48%] xl:justify-end">
+          <label className="flex min-h-[3.25rem] items-center gap-2 rounded-xl border border-black/10 bg-white/75 px-3 py-2.5 text-sm font-medium text-ink/80">
             <span>{t(locale, "language")}</span>
             <select
               value={room.locale}
@@ -452,13 +501,13 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           </label>
           <button
             onClick={shareInvite}
-            className="rounded-xl border border-black/10 bg-white/75 px-3 py-2.5 font-semibold"
+            className="min-h-[3.25rem] rounded-xl border border-black/10 bg-white/75 px-4 py-2.5 text-sm font-semibold md:text-base"
           >
             {t(locale, "invitePlayers")}
           </button>
           <button
             onClick={leaveRoom}
-            className="rounded-xl border border-black/10 px-3 py-2.5 font-semibold"
+            className="min-h-[3.25rem] rounded-xl border border-black/10 px-4 py-2.5 text-sm font-semibold md:text-base"
           >
             {t(locale, "leaveRoom")}
           </button>
@@ -469,7 +518,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 room.players.length < 3 ||
                 (room.round.phase !== "lobby" && room.round.phase !== "results")
               }
-              className="rounded-xl bg-accent px-3 py-2.5 font-semibold text-white"
+              className="min-h-[3.25rem] rounded-xl bg-accent px-4 py-2.5 text-sm font-semibold text-white md:text-base"
             >
               {room.round.phase === "results"
                 ? t(locale, "startNextRound")
@@ -496,10 +545,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           <Card className="bg-white/92 p-4">
             <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-center">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
+                <p className={sectionLabelClass}>
                   {t(locale, "yourSecret")}
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold md:text-3xl">
+                <h2 className={clsx("mt-1 font-semibold", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-2xl md:text-3xl")}>
                   {roleState
                     ? roleState.word
                     : room.round.phase === "lobby"
@@ -513,7 +562,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 </p>
               </div>
               <div className="rounded-2xl bg-sand/35 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
+                <p className={compactLabelClass}>
                   {t(locale, "game")}
                 </p>
                 <p className="mt-1 text-lg font-semibold">
@@ -521,7 +570,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 </p>
               </div>
               <div className="rounded-2xl bg-sand/35 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
+                <p className={compactLabelClass}>
                   {t(locale, "round")}
                 </p>
                 <p className="mt-1 text-lg font-semibold">
@@ -529,7 +578,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 </p>
               </div>
               <div className="rounded-2xl bg-sand/35 px-4 py-3">
-                <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
+                <p className={compactLabelClass}>
                   {t(locale, "phase")}
                 </p>
                 <p className="mt-1 text-lg font-semibold capitalize">
@@ -547,18 +596,18 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
           {room.round.phase === "lobby" ? (
             <Card className="bg-white/92 p-4">
-              <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
+              <p className={sectionLabelClass}>
                 {t(locale, "lobby")}
               </p>
-              <h2 className="mt-2 text-2xl font-semibold">
+              <h2 className={clsx("mt-2 font-semibold", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-2xl")}>
                 {t(locale, "gatherSuspects")}
               </h2>
-              <p className="mt-2 text-ink/68">
+              <p className={clsx("mt-2 text-ink/68", isMyanmar ? "text-lg leading-8" : "")}>
                 {t(locale, "lobbyHint")}
               </p>
               <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ink/45">
+                  <p className={compactLabelClass}>
                     {t(locale, "wordPack")}
                   </p>
                   <select
@@ -567,7 +616,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                     disabled={!self.isHost}
                     className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-ink outline-none transition focus:border-accent disabled:bg-black/[0.03]"
                   >
-                    {wordPacks.map((pack) => (
+                    {visibleWordPacks.map((pack) => (
                       <option key={pack.id} value={pack.id}>
                         {formatPackLabel(locale, pack)}
                       </option>
@@ -586,13 +635,13 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           {room.round.phase === "clue-entry" ? (
             <Card className="space-y-3 bg-white/92 p-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
+                <p className={sectionLabelClass}>
                   {t(locale, "clues")}
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold">
+                <h2 className={clsx("mt-1 font-semibold", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-2xl")}>
                   {isMyTurn ? t(locale, "yourTurnToSpeak") : t(locale, "anotherPlayerIsUp")}
                 </h2>
-                <p className="mt-2 text-sm text-ink/68 md:text-base">
+                <p className={clsx("mt-2 text-ink/68", isMyanmar ? "text-lg leading-8" : "text-sm md:text-base")}>
                   {isMyTurn
                     ? t(locale, "clueTurnHint")
                     : t(locale, "waitTurnHint")}
@@ -616,7 +665,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 })}
               </div>
 
-              <div className="flex flex-col gap-3 md:flex-row">
+              <div className="flex flex-col gap-3 md:flex-row md:items-stretch">
                 <input
                   value={clue}
                   onChange={(event) => setClue(event.target.value)}
@@ -633,12 +682,18 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   placeholder={
                     isMyTurn ? t(locale, "enterYourClue") : t(locale, "waitForYourTurn")
                   }
-                  className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 outline-none transition focus:border-accent"
+                  className={clsx(
+                    "w-full rounded-xl border border-black/10 bg-white px-4 outline-none transition focus:border-accent",
+                    isMyanmar ? "py-4 text-lg" : "py-3",
+                  )}
                 />
                 <button
                   onClick={submitClue}
                   disabled={!isMyTurn || clue.trim().length < 1}
-                  className="rounded-xl bg-ink px-4 py-3 font-semibold text-paper"
+                  className={clsx(
+                    "rounded-xl bg-ink px-4 font-semibold text-paper md:min-w-[10.5rem]",
+                    isMyanmar ? "py-4 text-lg leading-7" : "py-3",
+                  )}
                 >
                   {t(locale, "submitClue")}
                 </button>
@@ -649,13 +704,13 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           {room.round.phase === "voting" ? (
             <Card className="space-y-3 bg-white/92 p-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
+                <p className={sectionLabelClass}>
                   {t(locale, "voting")}
                 </p>
-                <h2 className="mt-1 text-2xl font-semibold">
+                <h2 className={clsx("mt-1 font-semibold", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-2xl")}>
                   {t(locale, "whoSoundedOff")}
                 </h2>
-                <p className="mt-2 text-sm text-ink/68 md:text-base">
+                <p className={clsx("mt-2 text-ink/68", isMyanmar ? "text-lg leading-8" : "text-sm md:text-base")}>
                   {t(locale, "votingHint")}
                 </p>
               </div>
@@ -664,7 +719,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 <div className="rounded-2xl border border-black/8 bg-white px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
+                      <p className={compactLabelClass}>
                         {t(locale, "voteProgress")}
                       </p>
                       <p className="mt-1 text-xl font-semibold">
@@ -675,7 +730,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                       </p>
                     </div>
                     <div className="rounded-xl bg-black/[0.04] px-3 py-2 text-right">
-                      <p className="text-xs uppercase tracking-[0.28em] text-ink/45">
+                      <p className={compactLabelClass}>
                         {t(locale, "remaining")}
                       </p>
                       <p className="mt-1 text-lg font-semibold">
@@ -705,7 +760,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 </div>
 
                 <div className="rounded-2xl border border-black/8 bg-black/[0.025] px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
+                  <p className={compactLabelClass}>
                     {t(locale, "roomStatus")}
                   </p>
                   <div className="mt-2 space-y-2">
@@ -726,11 +781,14 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                             </p>
                           </div>
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] ${
+                            className={clsx(
+                              "rounded-full px-3 py-1 text-xs font-semibold",
                               vote
                                 ? "bg-mint/20 text-ink"
                                 : "bg-sand/35 text-ink/65"
-                            }`}
+                              ,
+                              isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.2em]",
+                            )}
                           >
                             {vote ? t(locale, "done") : t(locale, "waiting")}
                           </span>
@@ -789,7 +847,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               <button
                 onClick={submitVote}
                 disabled={Boolean(myVote)}
-                className="rounded-xl bg-accent px-4 py-3 font-semibold text-white"
+                className={clsx(
+                  "rounded-xl bg-accent px-4 font-semibold text-white",
+                  isMyanmar ? "py-4 text-lg leading-7" : "py-3",
+                )}
               >
                 {myVote
                   ? t(locale, "voteSubmittedCompact", {
@@ -803,28 +864,43 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           {room.round.phase === "results" ? (
             <Card className="space-y-3 bg-white/92 p-4">
               <div className="result-stage rounded-[22px] px-4 py-4 text-paper">
-                <p className="text-xs font-semibold uppercase tracking-[0.28em] text-paper/60">
+                <p
+                  className={clsx(
+                    "text-xs font-semibold text-paper/60",
+                    isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.28em]",
+                  )}
+                >
                   {t(locale, "roundResult")}
                 </p>
                 <div className="mt-3 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                   <div>
-                    <h2 className="text-2xl font-semibold text-paper">
+                    <h2 className={clsx("font-semibold text-paper", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-2xl")}>
                       {t(locale, "round")} {visibleRoundNumber}
                     </h2>
-                    <p className="mt-2 text-3xl font-semibold text-white md:text-4xl">
+                    <p className={clsx("mt-2 font-semibold text-white", isMyanmar ? "text-[1.7rem] leading-[1.35] md:text-[1.9rem]" : "text-3xl md:text-4xl")}>
                       {room.round.outcome?.winner === "civilians"
                         ? t(locale, "civiliansWin")
                         : t(locale, "undercoverWins")}
                     </p>
                   </div>
-                  <div className="rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold uppercase tracking-[0.24em] text-paper/78">
+                  <div
+                    className={clsx(
+                      "rounded-full border border-white/12 bg-white/8 px-4 py-2 text-sm font-semibold text-paper/78",
+                      isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.24em]",
+                    )}
+                  >
                     {t(locale, "game")} {visibleGameNumber}
                   </div>
                 </div>
 
                 <div className="mt-4 grid gap-3 md:grid-cols-2">
                   <div className="rounded-2xl border border-white/10 bg-white/7 px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-paper/55">
+                    <p
+                      className={clsx(
+                        "text-xs font-semibold text-paper/55",
+                        isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.24em]",
+                      )}
+                    >
                       {t(locale, "undercover")}
                     </p>
                     <p className="mt-1 text-2xl font-semibold text-white">
@@ -835,7 +911,12 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                     </p>
                   </div>
                   <div className="eliminated-reveal relative overflow-hidden rounded-2xl border border-accent/30 bg-[#301f1c] px-4 py-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.24em] text-[#f5b8ab]">
+                    <p
+                      className={clsx(
+                        "text-xs font-semibold text-[#f5b8ab]",
+                        isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.24em]",
+                      )}
+                    >
                       {t(locale, "eliminated")}
                     </p>
                     <p className="mt-1 text-3xl font-semibold text-white">
@@ -847,7 +928,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                   </div>
                 </div>
 
-                <p className="mt-4 text-sm text-paper/72">
+                <p className={clsx("mt-4 text-paper/72", isMyanmar ? "text-sm leading-7" : "text-sm")}>
                   {room.round.outcome?.winner === "civilians"
                     ? t(locale, "civiliansWin")
                     : t(locale, "undercoverWins")}
@@ -881,7 +962,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
               <div className="grid gap-3 lg:grid-cols-[0.9fr_1.1fr]">
                 <div className="rounded-2xl border border-black/8 bg-black/[0.025] px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
+                  <p className={compactLabelClass}>
                     {t(locale, "voteTally")}
                   </p>
                   <div className="mt-2 grid gap-2">
@@ -905,7 +986,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 </div>
 
                 <div className="rounded-2xl border border-black/8 bg-white px-4 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/45">
+                  <p className={compactLabelClass}>
                     {t(locale, "whoVotedForWhom")}
                   </p>
                   <div className="mt-2 space-y-2">
@@ -962,7 +1043,7 @@ export function RoomClient({ roomCode }: RoomClientProps) {
 
         <div className="grid gap-4">
           <Card className="bg-white/92 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
+            <p className={sectionLabelClass}>
               {t(locale, "players")}
             </p>
             <div className="mt-3 grid gap-2">
@@ -1001,10 +1082,10 @@ export function RoomClient({ roomCode }: RoomClientProps) {
           </Card>
 
           <Card className="bg-white/92 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-ink/50">
+            <p className={sectionLabelClass}>
               {t(locale, "roundNotes")}
             </p>
-            <ul className="mt-3 space-y-2 text-sm text-ink/68 md:text-base">
+            <ul className={clsx("mt-3 space-y-2 text-ink/68", isMyanmar ? "text-lg leading-9" : "text-sm md:text-base")}>
               <li>{t(locale, "note1")}</li>
               <li>{t(locale, "note2")}</li>
               <li>{t(locale, "note3")}</li>

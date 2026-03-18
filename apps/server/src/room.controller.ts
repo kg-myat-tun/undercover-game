@@ -9,13 +9,7 @@ export class RoomController {
 
   @Get("/word-packs")
   wordPacks() {
-    return wordPacks.map((pack) => ({
-      id: pack.id,
-      name: pack.name,
-      locale: pack.locale,
-      category: pack.category,
-      pairCount: pack.pairs.length
-    }));
+    return wordPacks;
   }
 
   @Get("/word-packs/:id")

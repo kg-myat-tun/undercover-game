@@ -54,6 +54,40 @@ describe("RoomService", () => {
     });
 
     expect(created.room.locale).toBe("my");
+    expect(created.room.wordPackId).toBe("classic");
+  });
+
+  it("normalizes legacy Myanmar pack ids when creating a room", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({
+      nickname: "Host",
+      locale: "my",
+      wordPackId: "myanmar-classic",
+    });
+
+    expect(created.room.wordPackId).toBe("classic");
+  });
+
+  it("falls back to the default localized pack when the requested pack is unavailable", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({
+      nickname: "Host",
+      locale: "my",
+      wordPackId: "tech-media",
+    });
+
+    expect(created.room.wordPackId).toBe("classic");
+  });
+
+  it("keeps a selected pack when that pack supports Myanmar words", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({
+      nickname: "Host",
+      locale: "my",
+      wordPackId: "food-drink",
+    });
+
+    expect(created.room.wordPackId).toBe("food-drink");
   });
 
   it("rejects duplicate nicknames", async () => {
@@ -251,6 +285,23 @@ describe("RoomService", () => {
     });
 
     expect(updated.locale).toBe("my");
+    expect(updated.wordPackId).toBe("classic");
+  });
+
+  it("resets the room pack when the current pack is unavailable in the new locale", async () => {
+    const service = new RoomService(new RoomStoreFactory());
+    const created = await service.createRoom({
+      nickname: "Host",
+      wordPackId: "tech-media",
+    });
+
+    const updated = await service.updateLocale({
+      roomCode: created.roomCode,
+      playerSessionId: created.playerSessionId,
+      locale: "my",
+    });
+
+    expect(updated.wordPackId).toBe("classic");
   });
 
   it("rejects room locale changes from non-host players", async () => {
