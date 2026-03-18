@@ -289,15 +289,17 @@ export function t(
   key: keyof typeof messages.en,
   vars?: Vars,
 ): string {
-  const template = messages[locale][key] ?? messages.en[key];
+  const template = String(messages[locale][key] ?? messages.en[key]);
   if (!vars) {
     return template;
   }
 
-  return Object.entries(vars).reduce(
-    (output, [name, value]) => output.replaceAll(`{${name}}`, String(value)),
-    template,
-  );
+  let output = template;
+  for (const [name, value] of Object.entries(vars)) {
+    output = output.replaceAll(`{${name}}`, String(value));
+  }
+
+  return output;
 }
 
 export function translateError(
