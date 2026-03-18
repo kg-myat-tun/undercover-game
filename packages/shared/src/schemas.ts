@@ -47,6 +47,8 @@ export const startRoundInputSchema = z.object({
   playerSessionId: playerSessionIdSchema
 });
 
+export const continueRoundInputSchema = startRoundInputSchema;
+
 export const updateWordPackInputSchema = z.object({
   roomCode: roomCodeSchema,
   playerSessionId: playerSessionIdSchema,
@@ -107,11 +109,14 @@ export const roundOutcomeSchema = z.object({
   reason: z.enum(["undercover-found", "undercover-survived", "tie-break", "vote-skipped"])
 });
 
+export const voteResolutionReasonSchema = z.enum(["eliminated", "vote-skipped", "tie"]);
+
 export const roundPhaseSchema = z.enum([
   "lobby",
   "role-reveal",
   "clue-entry",
   "voting",
+  "round-resolution",
   "results"
 ]);
 
@@ -124,6 +129,7 @@ export const roundStateSchema = z.object({
   clues: z.array(clueSchema),
   votes: z.array(voteSchema),
   eliminatedPlayerId: playerIdSchema.nullable(),
+  resolutionReason: voteResolutionReasonSchema.nullable(),
   undercoverPlayerId: playerIdSchema.nullable(),
   civilianWord: z.string().nullable(),
   undercoverWord: z.string().nullable(),
@@ -166,6 +172,7 @@ export type ReconnectRoomInput = z.infer<typeof reconnectRoomInputSchema>;
 export type LeaveRoomInput = z.infer<typeof leaveRoomInputSchema>;
 export type KickPlayerInput = z.infer<typeof kickPlayerInputSchema>;
 export type StartRoundInput = z.infer<typeof startRoundInputSchema>;
+export type ContinueRoundInput = z.infer<typeof continueRoundInputSchema>;
 export type UpdateWordPackInput = z.infer<typeof updateWordPackInputSchema>;
 export type UpdateLocaleInput = z.infer<typeof updateLocaleInputSchema>;
 export type SubmitClueInput = z.infer<typeof submitClueInputSchema>;
@@ -176,6 +183,7 @@ export type PublicPlayer = z.infer<typeof publicPlayerSchema>;
 export type ClueSubmission = z.infer<typeof clueSchema>;
 export type Vote = z.infer<typeof voteSchema>;
 export type RoundOutcome = z.infer<typeof roundOutcomeSchema>;
+export type VoteResolutionReason = z.infer<typeof voteResolutionReasonSchema>;
 export type RoundPhase = z.infer<typeof roundPhaseSchema>;
 export type RoundState = z.infer<typeof roundStateSchema>;
 export type Room = z.infer<typeof roomSchema>;

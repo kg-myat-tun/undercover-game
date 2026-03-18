@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   allVotesSubmitted,
+  continueRound,
   createEmptyRound,
   createRound,
   determineOutcome,
@@ -92,6 +93,7 @@ describe("game engine", () => {
     expect(round.activePlayerIds).toEqual([]);
     expect(round.clues).toEqual([]);
     expect(round.votes).toEqual([]);
+    expect(round.resolutionReason).toBeNull();
     expect(round.outcome).toBeNull();
   });
 
@@ -274,7 +276,7 @@ describe("game engine", () => {
     });
   });
 
-  it("breaks tied player votes deterministically by player id", () => {
+  it("resolves tied player votes with no elimination", () => {
     const room = makeRoom();
     const round = makeVotingRound(room, {
       votes: [
@@ -286,8 +288,8 @@ describe("game engine", () => {
     });
 
     expect(resolveVotes(round)).toEqual({
-      eliminatedPlayerId: room.players[1].id,
-      reason: "tie-break",
+      eliminatedPlayerId: null,
+      reason: "tie",
     });
   });
 
@@ -341,17 +343,17 @@ describe("game engine", () => {
 
     const finalized = finalizeRound(room);
 
-    expect(finalized.round.phase).toBe("clue-entry");
+    expect(finalized.round.phase).toBe("round-resolution");
     expect(finalized.round.gameNumber).toBe(2);
-    expect(finalized.round.roundNumber).toBe(2);
+    expect(finalized.round.roundNumber).toBe(1);
     expect(finalized.round.eliminatedPlayerId).toBe(room.players[1].id);
+    expect(finalized.round.resolutionReason).toBe("eliminated");
     expect(finalized.round.activePlayerIds).toEqual([
       room.players[0].id,
       room.players[2].id,
       room.players[3].id,
     ]);
-    expect(finalized.round.votes).toHaveLength(0);
-    expect(finalized.round.clues).toHaveLength(0);
+    expect(finalized.round.votes).toHaveLength(4);
     expect(finalized.round.outcome).toBeNull();
   });
 
@@ -369,12 +371,13 @@ describe("game engine", () => {
 
     const finalized = finalizeRound(room);
 
-    expect(finalized.round.phase).toBe("clue-entry");
+    expect(finalized.round.phase).toBe("round-resolution");
     expect(finalized.round.gameNumber).toBe(1);
-    expect(finalized.round.roundNumber).toBe(2);
+    expect(finalized.round.roundNumber).toBe(1);
     expect(finalized.round.eliminatedPlayerId).toBeNull();
+    expect(finalized.round.resolutionReason).toBe("vote-skipped");
     expect(finalized.round.outcome).toBeNull();
-    expect(finalized.round.votes).toHaveLength(0);
+    expect(finalized.round.votes).toHaveLength(4);
   });
 
   it("keeps votes for the results screen when the game ends", () => {
@@ -392,7 +395,36 @@ describe("game engine", () => {
 
     expect(finalized.round.phase).toBe("results");
     expect(finalized.round.votes).toHaveLength(room.players.length);
+    expect(finalized.round.resolutionReason).toBe("eliminated");
     expect(finalized.round.outcome?.winner).toBe("civilians");
+  });
+
+  it("continues from round resolution into a fresh clue round", () => {
+    const room = makeRoom();
+    room.round = {
+      ...makeVotingRound(room, {
+        gameNumber: 2,
+        roundNumber: 3,
+        undercoverPlayerId: room.players[3].id,
+        votes: [
+          { voterId: room.players[0].id, targetPlayerId: room.players[1].id, submittedAt: 1 },
+          { voterId: room.players[1].id, targetPlayerId: room.players[1].id, submittedAt: 2 },
+          { voterId: room.players[2].id, targetPlayerId: room.players[1].id, submittedAt: 3 },
+          { voterId: room.players[3].id, targetPlayerId: room.players[1].id, submittedAt: 4 },
+        ],
+      }),
+    };
+
+    const resolved = finalizeRound(room);
+    const continued = continueRound(resolved);
+
+    expect(continued.round.phase).toBe("clue-entry");
+    expect(continued.round.gameNumber).toBe(2);
+    expect(continued.round.roundNumber).toBe(4);
+    expect(continued.round.eliminatedPlayerId).toBeNull();
+    expect(continued.round.resolutionReason).toBeNull();
+    expect(continued.round.votes).toEqual([]);
+    expect(continued.round.clues).toEqual([]);
   });
 
   it("awards scoreboard points only to the winning side", () => {

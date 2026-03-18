@@ -43,9 +43,10 @@ Each game follows these phases:
 1. `Lobby`
 2. `Clue Entry`
 3. `Voting`
-4. `Results` if the game ends
+4. `Round Resolution`
+5. `Results` if the game ends
 
-If the game does not end after a vote, the same game continues into another round and returns to `Clue Entry`.
+If the game does not end after a vote, the room enters `Round Resolution` first, then continues into the next clue round.
 
 ## Clue Phase
 
@@ -70,8 +71,8 @@ When all active players have voted:
 Resolution rules:
 
 - If `skip` has at least as many votes as the top player, no one is eliminated
+- If player votes are tied for the top spot, no one is eliminated
 - Otherwise, the highest-voted player is eliminated
-- If players are tied, the server breaks the tie deterministically
 
 ## Win Conditions
 
@@ -89,8 +90,18 @@ If a vote resolves to `skip`:
 
 - no one is eliminated
 - the same game continues
-- the next round begins immediately
-- the round number increases
+- the room shows the round resolution
+- the host continues to the next clue round
+- the round number increases when that next clue round begins
+
+## Round Resolution
+
+After voting resolves and the game is not over:
+
+- the room shows whether someone was eliminated
+- the room shows whether the vote skipped or tied
+- votes from that round remain visible during the resolution step
+- the host continues to the next clue round
 
 ## Results
 
@@ -145,6 +156,7 @@ If the game ends and the host starts again:
 
 - Players reconnect using their saved session on the same device
 - If the host leaves, host control is reassigned by the server
+- If a player disconnects, leaves, or is removed during a game, the server repairs the active round so the room does not get stuck
 
 ## Current Scope
 

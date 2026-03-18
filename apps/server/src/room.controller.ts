@@ -1,11 +1,11 @@
 import { Controller, Get, Param } from "@nestjs/common";
 import { getWordPack, wordPacks } from "@undercover/shared";
 
-import { RoomService } from "./game/room.service.js";
+import { RoomQueryService } from "./game/room-query.service.js";
 
 @Controller()
 export class RoomController {
-  constructor(private readonly roomService: RoomService) {}
+  constructor(private readonly roomQueryService: RoomQueryService) {}
 
   @Get("/word-packs")
   wordPacks() {
@@ -19,6 +19,6 @@ export class RoomController {
 
   @Get("/rooms/:code")
   async room(@Param("code") code: string) {
-    return this.roomService.getPublicRoom(code.toUpperCase());
+    return this.roomQueryService.getPublicRoom(code.toUpperCase());
   }
 }

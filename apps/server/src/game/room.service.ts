@@ -1,7 +1,8 @@
-import { Injectable } from "@nestjs/common";
+import { Inject, Injectable } from "@nestjs/common";
 import {
   createEmptyRound,
   createRound,
+  continueRound,
   finalizeRound,
   getRoleForPlayer,
   getDefaultWordPackId,
@@ -9,13 +10,12 @@ import {
   normalizeWordPackId,
   submitClue,
   submitVote,
-  toPublicRoom,
   type CreateRoomInput,
   type JoinRoomInput,
   type KickPlayerInput,
   type LeaveRoomInput,
-  type PublicRoom,
   type ReconnectRoomInput,
+  type ContinueRoundInput,
   type UpdateLocaleInput,
   type Role,
   type Room,
@@ -26,9 +26,9 @@ import {
 } from "@undercover/shared";
 import { randomUUID } from "node:crypto";
 
-import { RoomStoreFactory } from "../redis/room-store.factory.js";
-import type { RoomStore } from "../redis/room-store.js";
+import { ROOM_STORE, type RoomStore } from "../redis/room-store.js";
 import { RoomError } from "./errors.js";
+import { RoomQueryService } from "./room-query.service.js";
 
 const MIN_PLAYERS = 3;
 const MAX_PLAYERS = 8;
@@ -41,11 +41,10 @@ type PlayerSecrets = {
 
 @Injectable()
 export class RoomService {
-  private readonly store: RoomStore;
-
-  constructor(roomStoreFactory: RoomStoreFactory) {
-    this.store = roomStoreFactory.getStore();
-  }
+  constructor(
+    @Inject(ROOM_STORE) private readonly store: RoomStore,
+    private readonly roomQueryService: RoomQueryService
+  ) {}
 
   async createRoom(input: CreateRoomInput) {
     const roomCode = await this.generateRoomCode();
@@ -90,7 +89,7 @@ export class RoomService {
   }
 
   async joinRoom(input: JoinRoomInput) {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const reconnectCandidate = input.playerSessionId
       ? room.players.find((player) => player.sessionId === input.playerSessionId)
       : undefined;
@@ -141,7 +140,7 @@ export class RoomService {
   }
 
   async reconnect(input: ReconnectRoomInput): Promise<Room> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const player = room.players.find((item) => item.sessionId === input.playerSessionId);
 
     if (!player) {
@@ -154,7 +153,7 @@ export class RoomService {
   }
 
   async leaveRoom(input: LeaveRoomInput): Promise<Room | null> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const playerIndex = room.players.findIndex((player) => player.sessionId === input.playerSessionId);
 
     if (playerIndex < 0) {
@@ -172,8 +171,8 @@ export class RoomService {
       return null;
     }
 
+    this.removePlayerFromCurrentRound(room, player.id);
     this.reassignHost(room);
-    room.round.activePlayerIds = room.round.activePlayerIds.filter((id) => id !== player.id);
     await this.store.saveRoom(room);
     return room;
   }
@@ -191,6 +190,7 @@ export class RoomService {
     }
 
     player.isConnected = false;
+    this.removePlayerFromCurrentRound(room, player.id);
 
     if (player.isHost) {
       player.isHost = false;
@@ -202,7 +202,7 @@ export class RoomService {
   }
 
   async kickPlayer(input: KickPlayerInput): Promise<Room> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
     if (!actor?.isHost) {
       throw new RoomError("NOT_HOST", "Only the host can remove players.");
@@ -213,6 +213,7 @@ export class RoomService {
       throw new RoomError("PLAYER_NOT_FOUND", "That player is no longer in the room.");
     }
 
+    this.removePlayerFromCurrentRound(room, room.players[targetIndex].id);
     room.players.splice(targetIndex, 1);
     this.reassignHost(room);
     await this.store.saveRoom(room);
@@ -220,7 +221,7 @@ export class RoomService {
   }
 
   async startRound(input: StartRoundInput): Promise<{ room: Room; secrets: PlayerSecrets[] }> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
 
     if (!actor?.isHost) {
@@ -252,7 +253,7 @@ export class RoomService {
   }
 
   async updateWordPack(input: UpdateWordPackInput): Promise<Room> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
 
     if (!actor?.isHost) {
@@ -273,7 +274,7 @@ export class RoomService {
   }
 
   async updateLocale(input: UpdateLocaleInput): Promise<Room> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
 
     if (!actor?.isHost) {
@@ -294,7 +295,7 @@ export class RoomService {
   }
 
   async submitClue(input: SubmitClueInput): Promise<Room> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const player = room.players.find((item) => item.sessionId === input.playerSessionId);
 
     if (!player) {
@@ -303,6 +304,10 @@ export class RoomService {
 
     if (room.round.phase !== "clue-entry") {
       throw new RoomError("INVALID_PHASE", "Clues can only be submitted during clue entry.");
+    }
+
+    if (!room.round.activePlayerIds.includes(player.id)) {
+      throw new RoomError("BAD_REQUEST", "You are not active in this round anymore.");
     }
 
     if (room.round.currentTurnPlayerId !== player.id) {
@@ -315,7 +320,7 @@ export class RoomService {
   }
 
   async submitVote(input: SubmitVoteInput): Promise<Room> {
-    const room = await this.getRoomOrThrow(input.roomCode);
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
     const voter = room.players.find((item) => item.sessionId === input.playerSessionId);
 
     if (!voter) {
@@ -324,6 +329,14 @@ export class RoomService {
 
     if (room.round.phase !== "voting") {
       throw new RoomError("INVALID_PHASE", "Voting is not open right now.");
+    }
+
+    if (!room.round.activePlayerIds.includes(voter.id)) {
+      throw new RoomError("BAD_REQUEST", "You are not active in this round anymore.");
+    }
+
+    if (input.targetPlayerId === voter.id) {
+      throw new RoomError("BAD_REQUEST", "You cannot vote for yourself.");
     }
 
     if (input.targetPlayerId && !room.round.activePlayerIds.includes(input.targetPlayerId)) {
@@ -346,30 +359,21 @@ export class RoomService {
     return room;
   }
 
-  async getPublicRoom(roomCode: string): Promise<PublicRoom> {
-    const room = await this.getRoomOrThrow(roomCode);
-    return toPublicRoom(room);
-  }
+  async continueRound(input: ContinueRoundInput): Promise<Room> {
+    const room = await this.roomQueryService.getRoomOrThrow(input.roomCode);
+    const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
 
-  async getPlayerRole(roomCode: string, playerId: string) {
-    const room = await this.getRoomOrThrow(roomCode);
-    return {
-      role: getRoleForPlayer(room.round, playerId),
-      word:
-        room.round.undercoverPlayerId === playerId
-          ? room.round.undercoverWord ?? ""
-          : room.round.civilianWord ?? ""
-    };
-  }
-
-  private async getRoomOrThrow(roomCode: string): Promise<Room> {
-    const room = await this.store.getRoom(roomCode.toUpperCase());
-
-    if (!room) {
-      throw new RoomError("ROOM_NOT_FOUND", "Room not found.");
+    if (!actor?.isHost) {
+      throw new RoomError("NOT_HOST", "Only the host can continue to the next round.");
     }
 
-    return room;
+    if (room.round.phase !== "round-resolution") {
+      throw new RoomError("INVALID_PHASE", "This round is not waiting for continuation.");
+    }
+
+    const updated = continueRound(room);
+    await this.store.saveRoom(updated);
+    return updated;
   }
 
   private async generateRoomCode(): Promise<string> {
@@ -396,6 +400,52 @@ export class RoomService {
       [...room.players].sort((left, right) => left.joinedAt - right.joinedAt)[0];
     if (nextHost) {
       nextHost.isHost = true;
+    }
+  }
+
+  private removePlayerFromCurrentRound(room: Room, playerId: string) {
+    if (room.round.phase === "lobby" || room.round.phase === "results") {
+      return;
+    }
+
+    if (!room.round.activePlayerIds.includes(playerId)) {
+      return;
+    }
+
+    const previousActivePlayerIds = [...room.round.activePlayerIds];
+    const nextActivePlayerIds = previousActivePlayerIds.filter((id) => id !== playerId);
+    const currentTurnIndex = previousActivePlayerIds.findIndex((id) => id === room.round.currentTurnPlayerId);
+
+    room.round.activePlayerIds = nextActivePlayerIds;
+    room.round.votes = room.round.votes.filter(
+      (vote) => vote.voterId !== playerId && vote.targetPlayerId !== playerId
+    );
+
+    if (room.round.currentTurnPlayerId === playerId) {
+      const nextTurnCandidate = nextActivePlayerIds[currentTurnIndex] ?? null;
+      room.round.currentTurnPlayerId = nextTurnCandidate;
+    }
+
+    if (nextActivePlayerIds.length < MIN_PLAYERS) {
+      room.round = {
+        ...createEmptyRound(),
+        gameNumber: room.round.gameNumber,
+        roundNumber: room.round.roundNumber
+      };
+      return;
+    }
+
+    if (room.round.phase === "clue-entry" && room.round.currentTurnPlayerId === null) {
+      room.round.phase = "voting";
+    }
+
+    if (
+      (room.round.phase === "voting" || room.round.phase === "round-resolution") &&
+      room.round.votes.length >= nextActivePlayerIds.length
+    ) {
+      const updated = finalizeRound(room);
+      room.round = updated.round;
+      room.scoreboard = updated.scoreboard;
     }
   }
 }

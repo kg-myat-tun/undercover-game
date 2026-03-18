@@ -13,6 +13,7 @@ import {
   kickPlayerInputSchema,
   leaveRoomInputSchema,
   reconnectRoomInputSchema,
+  continueRoundInputSchema,
   startRoundInputSchema,
   updateLocaleInputSchema,
   updateWordPackInputSchema,
@@ -27,6 +28,7 @@ import type { Server, Socket } from "socket.io";
 import { ZodError } from "zod";
 
 import { RoomError } from "../game/errors.js";
+import { RoomQueryService } from "../game/room-query.service.js";
 import { RoomService } from "../game/room.service.js";
 
 type RoomSocket = Socket<ClientToServerEvents, ServerToClientEvents> & {
@@ -47,7 +49,10 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server<ClientToServerEvents, ServerToClientEvents>;
 
-  constructor(private readonly roomService: RoomService) {}
+  constructor(
+    private readonly roomService: RoomService,
+    private readonly roomQueryService: RoomQueryService
+  ) {}
 
   handleConnection() {}
 
@@ -137,7 +142,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
       this.broadcastRoom(room.code);
 
       if (room.round.phase !== "lobby") {
-        const role = await this.roomService.getPlayerRole(room.code, player.id);
+        const role = await this.roomQueryService.getPlayerRole(room.code, player.id);
         client.emit("room:role", {
           roomCode: room.code,
           playerId: player.id,
@@ -239,6 +244,20 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
   }
 
+  @SubscribeMessage("round:continue")
+  async continueRoundEvent(@MessageBody() body: unknown, @ConnectedSocket() client: RoomSocket) {
+    try {
+      const input = continueRoundInputSchema.parse(body);
+      const room = await this.roomService.continueRound({
+        ...input,
+        roomCode: input.roomCode.toUpperCase()
+      });
+      this.broadcastRoom(room.code);
+    } catch (error) {
+      this.emitError(client, error);
+    }
+  }
+
   @SubscribeMessage("round:clue")
   async submitClueEvent(@MessageBody() body: unknown, @ConnectedSocket() client: RoomSocket) {
     try {
@@ -269,7 +288,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   private async broadcastRoom(roomCode: string) {
     const sockets = await this.server.in(roomCode).fetchSockets();
-    const room = await this.roomService.getPublicRoom(roomCode);
+    const room = await this.roomQueryService.getPublicRoom(roomCode);
 
     for (const socket of sockets) {
       const typedSocket = socket as unknown as RoomSocket;
@@ -285,7 +304,7 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   private async emitRoomSnapshot(roomCode: string, playerId: string, client: RoomSocket) {
-    const room = await this.roomService.getPublicRoom(roomCode);
+    const room = await this.roomQueryService.getPublicRoom(roomCode);
     client.emit("room:snapshot", {
       room,
       selfPlayerId: playerId

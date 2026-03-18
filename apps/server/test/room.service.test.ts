@@ -1,14 +1,31 @@
 import { describe, expect, it } from "vitest";
 
+import { RoomQueryService } from "../src/game/room-query.service.js";
 import { RoomService } from "../src/game/room.service.js";
 import { RoomError } from "../src/game/errors.js";
 import { RoomStoreFactory } from "../src/redis/room-store.factory.js";
 
+function createService() {
+  const store = new RoomStoreFactory().getStore();
+  return new RoomService(store, new RoomQueryService(store));
+}
+
 async function createStartedRoom() {
-  const service = new RoomService(new RoomStoreFactory());
+  return createStartedRoomWithPlayers();
+}
+
+async function createStartedRoomWithPlayers(extraNicknames: string[] = []) {
+  const store = new RoomStoreFactory().getStore();
+  const roomQueryService = new RoomQueryService(store);
+  const service = new RoomService(store, roomQueryService);
   const created = await service.createRoom({ nickname: "Host" });
   const joinedA = await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
   const joinedB = await service.joinRoom({ roomCode: created.roomCode, nickname: "Blair" });
+  const extras = [] as Array<{ roomCode: string; playerSessionId: string; playerId: string; room: any }>;
+
+  for (const nickname of extraNicknames) {
+    extras.push(await service.joinRoom({ roomCode: created.roomCode, nickname }));
+  }
 
   const started = await service.startRound({
     roomCode: created.roomCode,
@@ -17,9 +34,11 @@ async function createStartedRoom() {
 
   return {
     service,
+    roomQueryService,
     created,
     joinedA,
     joinedB,
+    extras,
     room: started.room,
     secrets: started.secrets,
   };
@@ -27,7 +46,7 @@ async function createStartedRoom() {
 
 describe("RoomService", () => {
   it("creates a room with a host and default classic word pack", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
 
     expect(created.room.wordPackId).toBe("classic");
@@ -37,7 +56,7 @@ describe("RoomService", () => {
   });
 
   it("uses a selected word pack when creating a room", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({
       nickname: "Host",
       wordPackId: "family-fun",
@@ -47,7 +66,7 @@ describe("RoomService", () => {
   });
 
   it("uses a selected locale when creating a room", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({
       nickname: "Host",
       locale: "my",
@@ -58,7 +77,7 @@ describe("RoomService", () => {
   });
 
   it("normalizes legacy Myanmar pack ids when creating a room", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({
       nickname: "Host",
       locale: "my",
@@ -68,19 +87,19 @@ describe("RoomService", () => {
     expect(created.room.wordPackId).toBe("classic");
   });
 
-  it("falls back to the default localized pack when the requested pack is unavailable", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+  it("keeps a requested pack when the locale supports it", async () => {
+    const service = createService();
     const created = await service.createRoom({
       nickname: "Host",
       locale: "my",
       wordPackId: "tech-media",
     });
 
-    expect(created.room.wordPackId).toBe("classic");
+    expect(created.room.wordPackId).toBe("tech-media");
   });
 
   it("keeps a selected pack when that pack supports Myanmar words", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({
       nickname: "Host",
       locale: "my",
@@ -91,7 +110,7 @@ describe("RoomService", () => {
   });
 
   it("rejects duplicate nicknames", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
 
@@ -103,7 +122,7 @@ describe("RoomService", () => {
   });
 
   it("caps the room at eight players", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
 
     for (const nickname of ["A", "B", "C", "D", "E", "F", "G"]) {
@@ -118,7 +137,7 @@ describe("RoomService", () => {
   });
 
   it("reuses an existing session when join is called with the same session id", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
 
     const samePlayer = await service.joinRoom({
@@ -133,7 +152,7 @@ describe("RoomService", () => {
   });
 
   it("reconnects an existing player session", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     await service.disconnect(created.roomCode, created.playerSessionId);
     const room = await service.reconnect({
@@ -146,7 +165,7 @@ describe("RoomService", () => {
   });
 
   it("reassigns host to the longest-connected remaining player when the host disconnects", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     const joinedA = await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
     await service.joinRoom({ roomCode: created.roomCode, nickname: "Blair" });
@@ -158,7 +177,9 @@ describe("RoomService", () => {
   });
 
   it("deletes the room when the last player leaves", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const store = new RoomStoreFactory().getStore();
+    const service = new RoomService(store, new RoomQueryService(store));
+    const roomQueryService = new RoomQueryService(store);
     const created = await service.createRoom({ nickname: "Host" });
 
     const room = await service.leaveRoom({
@@ -167,7 +188,7 @@ describe("RoomService", () => {
     });
 
     expect(room).toBeNull();
-    await expect(service.getPublicRoom(created.roomCode)).rejects.toMatchObject<
+    await expect(roomQueryService.getPublicRoom(created.roomCode)).rejects.toMatchObject<
       Partial<RoomError>
     >({
       code: "ROOM_NOT_FOUND",
@@ -175,7 +196,7 @@ describe("RoomService", () => {
   });
 
   it("allows only the host to kick a player", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     const joined = await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
 
@@ -191,7 +212,7 @@ describe("RoomService", () => {
   });
 
   it("allows only the host to start a round", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
     const joinedB = await service.joinRoom({ roomCode: created.roomCode, nickname: "Blair" });
@@ -207,7 +228,7 @@ describe("RoomService", () => {
   });
 
   it("requires at least three players to start", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
 
@@ -230,8 +251,123 @@ describe("RoomService", () => {
     expect(new Set(secrets.map((secret) => secret.playerId)).size).toBe(room.players.length);
   });
 
+  it("rejects self-votes", async () => {
+    const { service, created, joinedA, joinedB, room } = await createStartedRoom();
+    const sessionsByPlayerId = new Map([
+      [created.playerId, created.playerSessionId],
+      [joinedA.playerId, joinedA.playerSessionId],
+      [joinedB.playerId, joinedB.playerSessionId],
+    ]);
+
+    let currentRoom = room;
+    for (const playerId of currentRoom.round.activePlayerIds) {
+      currentRoom = await service.submitClue({
+        roomCode: created.roomCode,
+        playerSessionId: sessionsByPlayerId.get(playerId)!,
+        clue: `clue-${playerId.slice(0, 4)}`,
+      });
+    }
+
+    const voterId = currentRoom.round.activePlayerIds[0];
+
+    await expect(
+      service.submitVote({
+        roomCode: created.roomCode,
+        playerSessionId: sessionsByPlayerId.get(voterId)!,
+        targetPlayerId: voterId,
+      }),
+    ).rejects.toMatchObject<Partial<RoomError>>({
+      code: "BAD_REQUEST",
+    });
+  });
+
+  it("moves the game into round resolution before the next clue round", async () => {
+    const { service, created, joinedA, joinedB, extras, room } = await createStartedRoomWithPlayers([
+      "Casey",
+    ]);
+    const sessionsByPlayerId = new Map([
+      [created.playerId, created.playerSessionId],
+      [joinedA.playerId, joinedA.playerSessionId],
+      [joinedB.playerId, joinedB.playerSessionId],
+      [extras[0].playerId, extras[0].playerSessionId],
+    ]);
+
+    let currentRoom = room;
+    for (const playerId of currentRoom.round.activePlayerIds) {
+      currentRoom = await service.submitClue({
+        roomCode: created.roomCode,
+        playerSessionId: sessionsByPlayerId.get(playerId)!,
+        clue: `clue-${playerId.slice(0, 4)}`,
+      });
+    }
+
+    const activePlayerIds = [...currentRoom.round.activePlayerIds];
+    const eliminatedPlayerId = activePlayerIds.find(
+      (playerId) => playerId !== currentRoom.round.undercoverPlayerId,
+    )!;
+    const dissentTargetId = activePlayerIds.find((playerId) => playerId !== eliminatedPlayerId)!;
+
+    for (const playerId of activePlayerIds) {
+      currentRoom = await service.submitVote({
+        roomCode: created.roomCode,
+        playerSessionId: sessionsByPlayerId.get(playerId)!,
+        targetPlayerId: playerId === eliminatedPlayerId ? dissentTargetId : eliminatedPlayerId,
+      });
+    }
+
+    expect(currentRoom.round.phase).toBe("round-resolution");
+    expect(currentRoom.round.eliminatedPlayerId).toBe(eliminatedPlayerId);
+    expect(currentRoom.round.resolutionReason).toBe("eliminated");
+    expect(currentRoom.round.outcome).toBeNull();
+  });
+
+  it("lets the host continue after round resolution", async () => {
+    const { service, created, joinedA, joinedB, extras, room } = await createStartedRoomWithPlayers([
+      "Casey",
+    ]);
+    const sessionsByPlayerId = new Map([
+      [created.playerId, created.playerSessionId],
+      [joinedA.playerId, joinedA.playerSessionId],
+      [joinedB.playerId, joinedB.playerSessionId],
+      [extras[0].playerId, extras[0].playerSessionId],
+    ]);
+
+    let currentRoom = room;
+    for (const playerId of currentRoom.round.activePlayerIds) {
+      currentRoom = await service.submitClue({
+        roomCode: created.roomCode,
+        playerSessionId: sessionsByPlayerId.get(playerId)!,
+        clue: `clue-${playerId.slice(0, 4)}`,
+      });
+    }
+
+    const activePlayerIds = [...currentRoom.round.activePlayerIds];
+    const eliminatedPlayerId = activePlayerIds.find(
+      (playerId) => playerId !== currentRoom.round.undercoverPlayerId,
+    )!;
+    const dissentTargetId = activePlayerIds.find((playerId) => playerId !== eliminatedPlayerId)!;
+
+    for (const playerId of activePlayerIds) {
+      currentRoom = await service.submitVote({
+        roomCode: created.roomCode,
+        playerSessionId: sessionsByPlayerId.get(playerId)!,
+        targetPlayerId: playerId === eliminatedPlayerId ? dissentTargetId : eliminatedPlayerId,
+      });
+    }
+
+    const continued = await service.continueRound({
+      roomCode: created.roomCode,
+      playerSessionId: created.playerSessionId,
+    });
+
+    expect(currentRoom.round.phase).toBe("round-resolution");
+    expect(continued.round.phase).toBe("clue-entry");
+    expect(continued.round.roundNumber).toBe(2);
+    expect(continued.round.eliminatedPlayerId).toBeNull();
+  });
+
   it("lets the host change the word pack between games", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
 
     const updated = await service.updateWordPack({
@@ -244,7 +380,7 @@ describe("RoomService", () => {
   });
 
   it("rejects word pack changes from non-host players", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
     const joinedB = await service.joinRoom({ roomCode: created.roomCode, nickname: "Blair" });
@@ -275,7 +411,7 @@ describe("RoomService", () => {
   });
 
   it("lets the host change the room locale between games", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
 
     const updated = await service.updateLocale({
@@ -288,8 +424,8 @@ describe("RoomService", () => {
     expect(updated.wordPackId).toBe("classic");
   });
 
-  it("resets the room pack when the current pack is unavailable in the new locale", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+  it("keeps the room pack when the new locale also supports it", async () => {
+    const service = createService();
     const created = await service.createRoom({
       nickname: "Host",
       wordPackId: "tech-media",
@@ -301,11 +437,11 @@ describe("RoomService", () => {
       locale: "my",
     });
 
-    expect(updated.wordPackId).toBe("classic");
+    expect(updated.wordPackId).toBe("tech-media");
   });
 
   it("rejects room locale changes from non-host players", async () => {
-    const service = new RoomService(new RoomStoreFactory());
+    const service = createService();
     const created = await service.createRoom({ nickname: "Host" });
     await service.joinRoom({ roomCode: created.roomCode, nickname: "Alex" });
     const joinedB = await service.joinRoom({ roomCode: created.roomCode, nickname: "Blair" });
@@ -378,7 +514,7 @@ describe("RoomService", () => {
     }
 
     const voter = currentRoom.players[0]!;
-    const targetId = currentRoom.round.activePlayerIds[0]!;
+    const targetId = currentRoom.round.activePlayerIds.find((playerId) => playerId !== voter.id)!;
     await service.submitVote({
       roomCode: currentRoom.code,
       playerSessionId: voter.sessionId,
@@ -435,13 +571,13 @@ describe("RoomService", () => {
       });
     }
 
-    const targetId = room.round.activePlayerIds[0]!;
+    const targetId = room.round.activePlayerIds[1]!;
     for (const playerId of room.round.activePlayerIds) {
       const player = room.players.find((item) => item.id === playerId)!;
       room = await service.submitVote({
         roomCode: room.code,
         playerSessionId: player.sessionId,
-        targetPlayerId: targetId,
+        targetPlayerId: playerId === targetId ? room.round.activePlayerIds[0]! : targetId,
       });
     }
 
@@ -476,10 +612,11 @@ describe("RoomService", () => {
       });
     }
 
-    expect(room.round.phase).toBe("clue-entry");
+    expect(room.round.phase).toBe("round-resolution");
     expect(room.round.gameNumber).toBe(1);
-    expect(room.round.roundNumber).toBe(2);
+    expect(room.round.roundNumber).toBe(1);
     expect(room.round.eliminatedPlayerId).toBeNull();
+    expect(room.round.resolutionReason).toBe("vote-skipped");
     expect(room.round.outcome).toBeNull();
   });
 
@@ -496,13 +633,13 @@ describe("RoomService", () => {
       });
     }
 
-    const targetId = room.round.activePlayerIds[0]!;
+    const targetId = room.round.activePlayerIds[1]!;
     for (const playerId of room.round.activePlayerIds) {
       const player = room.players.find((item) => item.id === playerId)!;
       room = await service.submitVote({
         roomCode: room.code,
         playerSessionId: player.sessionId,
-        targetPlayerId: targetId,
+        targetPlayerId: playerId === targetId ? room.round.activePlayerIds[0]! : targetId,
       });
     }
 
@@ -519,7 +656,7 @@ describe("RoomService", () => {
   });
 
   it("reveals the undercover publicly after results", async () => {
-    const { service, created, room: startedRoom } = await createStartedRoom();
+    const { service, roomQueryService, created, room: startedRoom } = await createStartedRoom();
     let room = startedRoom;
 
     for (const playerId of room.round.activePlayerIds) {
@@ -531,17 +668,17 @@ describe("RoomService", () => {
       });
     }
 
-    const targetId = room.round.activePlayerIds[0]!;
+    const targetId = room.round.activePlayerIds[1]!;
     for (const playerId of room.round.activePlayerIds) {
       const player = room.players.find((item) => item.id === playerId)!;
       room = await service.submitVote({
         roomCode: room.code,
         playerSessionId: player.sessionId,
-        targetPlayerId: targetId,
+        targetPlayerId: playerId === targetId ? room.round.activePlayerIds[0]! : targetId,
       });
     }
 
-    const publicRoom = await service.getPublicRoom(created.roomCode);
+    const publicRoom = await roomQueryService.getPublicRoom(created.roomCode);
 
     expect(publicRoom.round.phase).toBe("results");
     expect(publicRoom.round.revealedUndercoverPlayerId).toBeTruthy();
