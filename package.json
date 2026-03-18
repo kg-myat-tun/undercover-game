@@ -1,0 +1,17 @@
+{
+  "name": "undercover",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "build:shared": "bun run --filter @undercover/shared build",
+    "build": "bun run build:shared && bun run --filter @undercover/server build && bun run --filter @undercover/web build",
+    "dev:web": "bun run build:shared && bun run --filter @undercover/web dev",
+    "dev:server": "bun run build:shared && bun run --filter @undercover/server start:dev",
+    "test": "bun run build:shared && bun run --filter @undercover/shared test && bun run --filter @undercover/server test && bun run --filter @undercover/web test",
+    "lint": "bun run --filter '*' lint"
+  }
+}
