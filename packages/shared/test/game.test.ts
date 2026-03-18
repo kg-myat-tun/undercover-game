@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest"
 
 import {
-  type Room,
   allVotesSubmitted,
   continueRound,
   createEmptyRound,
@@ -13,6 +12,7 @@ import {
   getWordPack,
   isWordPackAvailableInLocale,
   normalizeWordPackId,
+  type Room,
   resolveVotes,
   shufflePlayers,
   submitClue,

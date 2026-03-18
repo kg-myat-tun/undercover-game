@@ -1,5 +1,5 @@
 import { Inject, Injectable } from "@nestjs/common"
-import { type PublicRoom, type Room, getRoleForPlayer, toPublicRoom } from "@undercover/shared"
+import { getRoleForPlayer, type PublicRoom, type Room, toPublicRoom } from "@undercover/shared"
 
 import { ROOM_STORE, type RoomStore } from "../redis/room-store.js"
 import { RoomError } from "./errors.js"

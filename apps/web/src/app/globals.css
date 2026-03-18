@@ -1,6 +1,15 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@theme {
+  --color-paper: #f5efe4;
+  --color-ink: #162025;
+  --color-accent: #e76f51;
+  --color-mint: #6ab187;
+  --color-sand: #d8c3a5;
+  --font-display: Georgia, serif;
+  --font-body: ui-sans-serif, system-ui, sans-serif;
+  --shadow-card: 0 18px 45px rgba(22, 32, 37, 0.12);
+}
 
 :root {
   color-scheme: light;
@@ -8,14 +17,17 @@
 
 body {
   @apply bg-paper text-ink font-body min-h-screen;
-  background-image: radial-gradient(circle at top left, rgba(231, 111, 81, 0.2), transparent 24%),
+  background-image:
+    radial-gradient(circle at top left, rgba(231, 111, 81, 0.2), transparent 24%),
     radial-gradient(circle at bottom right, rgba(106, 177, 135, 0.18), transparent 22%),
     linear-gradient(180deg, #f4eadb 0%, #eadcc7 100%);
 }
 
 .lang-my {
   font-family: "Myanmar Text", "Myanmar Sangam MN", "Nirmala UI", sans-serif;
-  font-feature-settings: "liga" 1, "clig" 1;
+  font-feature-settings:
+    "liga" 1,
+    "clig" 1;
 }
 
 .lang-my .font-display {
@@ -120,7 +132,8 @@ button:disabled {
   position: absolute;
   inset: 0;
   z-index: -1;
-  background: radial-gradient(circle at 10% 20%, rgba(231, 111, 81, 0.24), transparent 32%),
+  background:
+    radial-gradient(circle at 10% 20%, rgba(231, 111, 81, 0.24), transparent 32%),
     radial-gradient(circle at 85% 15%, rgba(106, 177, 135, 0.16), transparent 28%),
     linear-gradient(135deg, rgba(20, 28, 33, 0.98), rgba(34, 42, 47, 0.94));
 }
@@ -170,7 +183,8 @@ button:disabled {
   align-items: center;
   justify-content: center;
   padding: 1.5rem;
-  background: radial-gradient(circle at center, rgba(231, 111, 81, 0.1), transparent 28%),
+  background:
+    radial-gradient(circle at center, rgba(231, 111, 81, 0.1), transparent 28%),
     linear-gradient(180deg, rgba(8, 11, 13, 0.86), rgba(8, 11, 13, 0.94));
   backdrop-filter: blur(14px);
   animation: verdictBackdropIn 180ms ease-out both;
@@ -182,19 +196,23 @@ button:disabled {
   border-radius: 18px;
   padding: 1.5rem 1.75rem;
   color: #fff7ec;
-  box-shadow: 0 28px 80px rgba(11, 15, 18, 0.44), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  box-shadow:
+    0 28px 80px rgba(11, 15, 18, 0.44),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
   animation: verdictBarIn 520ms cubic-bezier(0.18, 0.84, 0.28, 1) both;
   position: relative;
   overflow: hidden;
 }
 
 .verdict-bar.eliminated {
-  background: radial-gradient(circle at 18% 50%, rgba(231, 111, 81, 0.28), transparent 24%),
+  background:
+    radial-gradient(circle at 18% 50%, rgba(231, 111, 81, 0.28), transparent 24%),
     linear-gradient(90deg, rgba(22, 10, 9, 0.98), rgba(72, 22, 17, 0.98) 42%, rgba(22, 10, 9, 0.98));
 }
 
 .verdict-bar.skipped {
-  background: radial-gradient(circle at 18% 50%, rgba(216, 195, 165, 0.16), transparent 24%),
+  background:
+    radial-gradient(circle at 18% 50%, rgba(216, 195, 165, 0.16), transparent 24%),
     linear-gradient(
       90deg,
       rgba(16, 20, 22, 0.98),

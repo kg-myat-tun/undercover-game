@@ -1,5 +1,5 @@
-import { type ReactNode, act } from "react"
-import { type Root, createRoot } from "react-dom/client"
+import { act, type ReactNode } from "react"
+import { createRoot, type Root } from "react-dom/client"
 ;(
   globalThis as typeof globalThis & { IS_REACT_ACT_ENVIRONMENT?: boolean }
 ).IS_REACT_ACT_ENVIRONMENT = true

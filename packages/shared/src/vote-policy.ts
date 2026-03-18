@@ -1,8 +1,6 @@
-import type { Room, RoundOutcome, RoundState, VoteResolutionReason } from "./schemas.js"
-
 import { getSafeCounter } from "./game-core.js"
-import { getRoleForPlayer } from "./outcome-policy.js"
-import { determineOutcome } from "./outcome-policy.js"
+import { determineOutcome, getRoleForPlayer } from "./outcome-policy.js"
+import type { Room, RoundState, VoteResolutionReason } from "./schemas.js"
 
 export function submitVote(
   round: RoundState,

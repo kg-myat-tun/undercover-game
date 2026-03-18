@@ -1,7 +1,6 @@
 // @vitest-environment jsdom
 
 import type { PublicRoom } from "@undercover/shared"
-import React from "react"
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 
 import { storeSession } from "../../../shared/lib/session"

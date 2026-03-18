@@ -1,7 +1,7 @@
 "use client"
 
 import type { ClientToServerEvents, ServerToClientEvents } from "@undercover/shared"
-import { type Socket, io } from "socket.io-client"
+import { io, type Socket } from "socket.io-client"
 
 import { socketUrl } from "./config"
 

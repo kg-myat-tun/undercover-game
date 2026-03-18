@@ -1,7 +1,6 @@
+import { getSafeCounter } from "./game-core.js"
 import type { Player, Room, RoundState } from "./schemas.js"
 import { getWordPack } from "./words.js"
-
-import { getSafeCounter } from "./game-core.js"
 
 export function chooseUndercover(players: Player[], random = Math.random): Player {
   const index = Math.floor(random() * players.length)

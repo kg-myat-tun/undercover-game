@@ -1,7 +1,5 @@
 "use client"
 
-import React from "react"
-
 import { RoomClientView } from "./components/organisms/room-client-view"
 import { useRoomClientState } from "./hooks/use-room-client-state"
 

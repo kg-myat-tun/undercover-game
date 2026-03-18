@@ -9,18 +9,17 @@ import {
 } from "@nestjs/websockets"
 import {
   type ClientToServerEvents,
-  type ServerErrorPayload,
-  type ServerToClientEvents,
   continueRoundInputSchema,
   createRoomInputSchema,
   joinRoomInputSchema,
   kickPlayerInputSchema,
   leaveRoomInputSchema,
   reconnectRoomInputSchema,
+  type ServerErrorPayload,
+  type ServerToClientEvents,
   startRoundInputSchema,
   submitClueInputSchema,
   submitVoteInputSchema,
-  toPublicRoom,
   updateLocaleInputSchema,
   updateWordPackInputSchema,
 } from "@undercover/shared"
@@ -28,8 +27,8 @@ import type { Server, Socket } from "socket.io"
 import { ZodError } from "zod"
 
 import { RoomError } from "../game/errors.js"
-import type { RoomQueryService } from "../game/room-query.service.js"
 import type { RoomService } from "../game/room.service.js"
+import type { RoomQueryService } from "../game/room-query.service.js"
 
 type RoomSocket = Socket<ClientToServerEvents, ServerToClientEvents> & {
   data: {

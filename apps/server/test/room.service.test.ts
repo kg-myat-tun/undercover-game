@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest"
 
 import type { RoomError } from "../src/game/errors.js"
-import { RoomQueryService } from "../src/game/room-query.service.js"
 import { RoomService } from "../src/game/room.service.js"
+import { RoomQueryService } from "../src/game/room-query.service.js"
 import { RoomStoreFactory } from "../src/redis/room-store.factory.js"
 
 function createService() {

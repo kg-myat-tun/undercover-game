@@ -1,5 +1,3 @@
-import React from "react"
-
 type HeroStatProps = {
   label: string
   value: string

@@ -1,5 +1,3 @@
-import React from "react"
-
 type VoteOptionRowProps = {
   checked: boolean
   disabled: boolean

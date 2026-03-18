@@ -2,7 +2,6 @@
 
 import clsx from "clsx"
 import Link from "next/link"
-import React from "react"
 
 import { formatPackLabel, t } from "../../../../shared/lib/i18n"
 import { Card } from "../../../../shared/ui/atoms/card"

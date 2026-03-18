@@ -1,7 +1,6 @@
 "use client"
 
 import clsx from "clsx"
-import React from "react"
 
 import { formatPackLabel, t } from "../../../../shared/lib/i18n"
 import { Card } from "../../../../shared/ui/atoms/card"

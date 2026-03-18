@@ -56,10 +56,7 @@ export function useRoomClientState(roomCode: string) {
     const playerSessionId = getStoredSession(roomCode)
     socket.connect()
 
-    const onSnapshot = (payload: {
-      room: PublicRoom
-      selfPlayerId: string
-    }) => {
+    const onSnapshot = (payload: { room: PublicRoom; selfPlayerId: string }) => {
       setRoom(payload.room)
       setSelfPlayerId(payload.selfPlayerId)
       setLocale(payload.room.locale)
@@ -67,11 +64,7 @@ export function useRoomClientState(roomCode: string) {
       setError(null)
     }
 
-    const onRole = (payload: {
-      role: Role
-      word: string
-      playerId: string
-    }) => {
+    const onRole = (payload: { role: Role; word: string; playerId: string }) => {
       setRoleState({ role: payload.role, word: payload.word })
       setSecretVisible(true)
     }

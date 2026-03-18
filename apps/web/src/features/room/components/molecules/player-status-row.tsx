@@ -1,5 +1,3 @@
-import React from "react"
-
 import { t } from "../../../../shared/lib/i18n"
 import type { AppLocale } from "../../../../shared/lib/locale"
 

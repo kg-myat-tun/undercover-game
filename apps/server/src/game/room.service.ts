@@ -3,17 +3,6 @@ import { Inject, Injectable } from "@nestjs/common"
 import {
   type ContinueRoundInput,
   type CreateRoomInput,
-  type JoinRoomInput,
-  type KickPlayerInput,
-  type LeaveRoomInput,
-  type ReconnectRoomInput,
-  type Role,
-  type Room,
-  type StartRoundInput,
-  type SubmitClueInput,
-  type SubmitVoteInput,
-  type UpdateLocaleInput,
-  type UpdateWordPackInput,
   continueRound,
   createEmptyRound,
   createRound,
@@ -21,9 +10,20 @@ import {
   getDefaultWordPackId,
   getRoleForPlayer,
   isWordPackAvailableInLocale,
+  type JoinRoomInput,
+  type KickPlayerInput,
+  type LeaveRoomInput,
   normalizeWordPackId,
+  type ReconnectRoomInput,
+  type Role,
+  type Room,
+  type StartRoundInput,
+  type SubmitClueInput,
+  type SubmitVoteInput,
   submitClue,
   submitVote,
+  type UpdateLocaleInput,
+  type UpdateWordPackInput,
 } from "@undercover/shared"
 
 import { ROOM_STORE, type RoomStore } from "../redis/room-store.js"
@@ -417,9 +417,10 @@ export class RoomService {
 
     const previousActivePlayerIds = [...room.round.activePlayerIds]
     const nextActivePlayerIds = previousActivePlayerIds.filter((id) => id !== playerId)
-    const currentTurnIndex = previousActivePlayerIds.findIndex(
-      (id) => id === room.round.currentTurnPlayerId,
-    )
+    const currentTurnIndex =
+      room.round.currentTurnPlayerId === null
+        ? -1
+        : previousActivePlayerIds.indexOf(room.round.currentTurnPlayerId)
 
     room.round.activePlayerIds = nextActivePlayerIds
     room.round.votes = room.round.votes.filter(

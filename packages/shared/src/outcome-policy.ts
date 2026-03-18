@@ -1,6 +1,5 @@
-import type { RoundOutcome, RoundState } from "./schemas.js"
-
 import type { Role } from "./game-types.js"
+import type { RoundOutcome, RoundState } from "./schemas.js"
 
 export function getRoleForPlayer(round: RoundState, playerId: string): Role {
   return round.undercoverPlayerId === playerId ? "undercover" : "civilian"
