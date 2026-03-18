@@ -8,6 +8,12 @@ Realtime Undercover party game built as a TypeScript monorepo.
 - `apps/server`: NestJS + Socket.IO realtime backend
 - `packages/shared`: shared schemas, game engine, and socket contracts
 
+## Docs
+
+- `docs/GAME_RULES.md`: player-facing rules and standard gameplay behavior
+- `docs/GAME_ENGINE_LOGIC.md`: current runtime game engine logic and invariants
+- `docs/STANDARD_GAME_ENGINE_ARCHITECTURE.md`: target engine architecture and SOLID guidance
+
 ## Getting Started
 
 1. Install dependencies:
