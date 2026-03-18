@@ -14,6 +14,7 @@ import {
   leaveRoomInputSchema,
   reconnectRoomInputSchema,
   startRoundInputSchema,
+  updateWordPackInputSchema,
   submitClueInputSchema,
   submitVoteInputSchema,
   toPublicRoom,
@@ -172,6 +173,20 @@ export class RoomGateway implements OnGatewayConnection, OnGatewayDisconnect {
     try {
       const input = kickPlayerInputSchema.parse(body);
       const room = await this.roomService.kickPlayer({
+        ...input,
+        roomCode: input.roomCode.toUpperCase()
+      });
+      this.broadcastRoom(room.code);
+    } catch (error) {
+      this.emitError(client, error);
+    }
+  }
+
+  @SubscribeMessage("room:update-word-pack")
+  async updateWordPack(@MessageBody() body: unknown, @ConnectedSocket() client: RoomSocket) {
+    try {
+      const input = updateWordPackInputSchema.parse(body);
+      const room = await this.roomService.updateWordPack({
         ...input,
         roomCode: input.roomCode.toUpperCase()
       });

@@ -6,6 +6,7 @@ import type {
   PublicRoom,
   ReconnectRoomInput,
   StartRoundInput,
+  UpdateWordPackInput,
   SubmitClueInput,
   SubmitVoteInput
 } from "./schemas.js";
@@ -47,6 +48,7 @@ export interface ClientToServerEvents {
   "room:reconnect": (input: ReconnectRoomInput) => void;
   "room:leave": (input: LeaveRoomInput) => void;
   "room:kick": (input: KickPlayerInput) => void;
+  "room:update-word-pack": (input: UpdateWordPackInput) => void;
   "round:start": (input: StartRoundInput) => void;
   "round:clue": (input: SubmitClueInput) => void;
   "round:vote": (input: SubmitVoteInput) => void;

@@ -45,6 +45,12 @@ export const startRoundInputSchema = z.object({
   playerSessionId: playerSessionIdSchema
 });
 
+export const updateWordPackInputSchema = z.object({
+  roomCode: roomCodeSchema,
+  playerSessionId: playerSessionIdSchema,
+  wordPackId: z.string().min(1)
+});
+
 export const submitClueInputSchema = z.object({
   roomCode: roomCodeSchema,
   playerSessionId: playerSessionIdSchema,
@@ -151,6 +157,7 @@ export type ReconnectRoomInput = z.infer<typeof reconnectRoomInputSchema>;
 export type LeaveRoomInput = z.infer<typeof leaveRoomInputSchema>;
 export type KickPlayerInput = z.infer<typeof kickPlayerInputSchema>;
 export type StartRoundInput = z.infer<typeof startRoundInputSchema>;
+export type UpdateWordPackInput = z.infer<typeof updateWordPackInputSchema>;
 export type SubmitClueInput = z.infer<typeof submitClueInputSchema>;
 export type SubmitVoteInput = z.infer<typeof submitVoteInputSchema>;
 export type Player = z.infer<typeof playerSchema>;

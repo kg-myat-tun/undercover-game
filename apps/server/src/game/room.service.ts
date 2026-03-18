@@ -16,6 +16,7 @@ import {
   type Role,
   type Room,
   type StartRoundInput,
+  type UpdateWordPackInput,
   type SubmitClueInput,
   type SubmitVoteInput
 } from "@undercover/shared";
@@ -238,6 +239,23 @@ export class RoomService {
             : room.round.civilianWord ?? ""
       }))
     };
+  }
+
+  async updateWordPack(input: UpdateWordPackInput): Promise<Room> {
+    const room = await this.getRoomOrThrow(input.roomCode);
+    const actor = room.players.find((player) => player.sessionId === input.playerSessionId);
+
+    if (!actor?.isHost) {
+      throw new RoomError("NOT_HOST", "Only the host can change the word pack.");
+    }
+
+    if (room.round.phase !== "lobby" && room.round.phase !== "results") {
+      throw new RoomError("INVALID_PHASE", "Word packs can only be changed between games.");
+    }
+
+    room.wordPackId = input.wordPackId;
+    await this.store.saveRoom(room);
+    return room;
   }
 
   async submitClue(input: SubmitClueInput): Promise<Room> {

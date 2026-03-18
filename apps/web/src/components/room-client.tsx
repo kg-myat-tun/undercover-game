@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import { Card } from "./card";
+import { serverUrl } from "../lib/config";
 import { clearStoredSession, getStoredSession } from "../lib/session";
 import { getSocket } from "../lib/socket";
 
@@ -29,6 +30,9 @@ export function RoomClient({ roomCode }: RoomClientProps) {
   const [reconnecting, setReconnecting] = useState(true);
   const [inviteFeedback, setInviteFeedback] = useState<string | null>(null);
   const [showVerdictReveal, setShowVerdictReveal] = useState(false);
+  const [wordPacks, setWordPacks] = useState<
+    Array<{ id: string; name: string; category: string; pairCount: number }>
+  >([]);
   const previousPhaseRef = useRef<string | null>(null);
 
   useEffect(() => {
@@ -78,6 +82,25 @@ export function RoomClient({ roomCode }: RoomClientProps) {
       socket.off("room:error", onError);
     };
   }, [roomCode]);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    fetch(`${serverUrl}/word-packs`, { signal: abortController.signal })
+      .then((response) => response.json())
+      .then((packs) => {
+        if (Array.isArray(packs)) {
+          setWordPacks(packs);
+        }
+      })
+      .catch(() => {
+        // Keep the selector empty if metadata fails to load.
+      });
+
+    return () => {
+      abortController.abort();
+    };
+  }, []);
 
   useEffect(() => {
     if (!room) {
@@ -264,6 +287,19 @@ export function RoomClient({ roomCode }: RoomClientProps) {
     socket.emit("round:start", { roomCode, playerSessionId: sessionId });
   };
 
+  const updateWordPack = (wordPackId: string) => {
+    const sessionId = getStoredSession(roomCode);
+    if (!sessionId) {
+      return;
+    }
+
+    socket.emit("room:update-word-pack", {
+      roomCode,
+      playerSessionId: sessionId,
+      wordPackId,
+    });
+  };
+
   const submitClue = () => {
     const sessionId = getStoredSession(roomCode);
     if (!sessionId || !clue.trim()) {
@@ -331,19 +367,19 @@ export function RoomClient({ roomCode }: RoomClientProps) {
                 </p>
                 <h2 className="verdict-wordmark text-4xl font-semibold md:text-6xl">
                   {room.round.eliminatedPlayerId
-                    ? `${eliminatedPlayerName} is eliminated`
-                    : "Skip this round"}
+                    ? `${eliminatedPlayerName} was eliminated`
+                    : "No one was eliminated"}
                 </h2>
                 <p className="max-w-3xl text-base text-white/78 md:text-xl">
                   {room.round.eliminatedPlayerId
-                    ? `Voted by: ${eliminatedByNames || "No votes recorded"}`
-                    : `Skipped by: ${skippedByNames || "No skip votes recorded"}`}
+                    ? `Votes cast by: ${eliminatedByNames || "No votes recorded"}`
+                    : `Skip votes cast by: ${skippedByNames || "No skip votes recorded"}`}
                 </p>
               </div>
               <div className="mt-6 rounded-full border border-white/10 bg-white/8 px-4 py-2 text-sm font-semibold uppercase tracking-[0.24em] text-white/72">
                 {room.round.eliminatedPlayerId
-                  ? "Crew decision executed"
-                  : "Room chose to pass"}
+                  ? "Decision locked in"
+                  : "Round skipped"}
               </div>
             </div>
           </div>
@@ -467,6 +503,30 @@ export function RoomClient({ roomCode }: RoomClientProps) {
               <p className="mt-2 text-ink/68">
                 The host can start once at least three players have joined.
               </p>
+              <div className="mt-4 grid gap-3 md:grid-cols-[minmax(0,1fr)_auto] md:items-end">
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-[0.24em] text-ink/45">
+                    Word pack
+                  </p>
+                  <select
+                    value={room.wordPackId}
+                    onChange={(event) => updateWordPack(event.target.value)}
+                    disabled={!self.isHost}
+                    className="mt-2 w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-ink outline-none transition focus:border-accent disabled:bg-black/[0.03]"
+                  >
+                    {wordPacks.map((pack) => (
+                      <option key={pack.id} value={pack.id}>
+                        {pack.name} • {pack.category} • {pack.pairCount} pairs
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="rounded-xl bg-black/[0.03] px-4 py-3 text-sm text-ink/68">
+                  {self.isHost
+                    ? "Host can change pack before starting."
+                    : "Waiting for host to choose the pack."}
+                </div>
+              </div>
             </Card>
           ) : null}
 

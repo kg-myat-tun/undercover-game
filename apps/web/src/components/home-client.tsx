@@ -4,6 +4,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 
 import { Card } from "./card";
+import { serverUrl } from "../lib/config";
 import { getSocket } from "../lib/socket";
 import { storeSession } from "../lib/session";
 
@@ -17,6 +18,10 @@ export function HomeClient() {
   const [createName, setCreateName] = useState("");
   const [joinName, setJoinName] = useState("");
   const [joinCode, setJoinCode] = useState("");
+  const [wordPacks, setWordPacks] = useState<
+    Array<{ id: string; name: string; category: string; pairCount: number }>
+  >([]);
+  const [selectedWordPackId, setSelectedWordPackId] = useState("classic");
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
 
@@ -26,6 +31,30 @@ export function HomeClient() {
       setJoinCode(invitedRoomCode.toUpperCase());
     }
   }, [searchParams]);
+
+  useEffect(() => {
+    const abortController = new AbortController();
+
+    fetch(`${serverUrl}/word-packs`, { signal: abortController.signal })
+      .then((response) => response.json())
+      .then((packs) => {
+        if (!Array.isArray(packs)) {
+          return;
+        }
+
+        setWordPacks(packs);
+        if (packs[0]?.id && !packs.some((pack) => pack.id === selectedWordPackId)) {
+          setSelectedWordPackId(packs[0].id);
+        }
+      })
+      .catch(() => {
+        // Keep the default pack if metadata is unavailable.
+      });
+
+    return () => {
+      abortController.abort();
+    };
+  }, [selectedWordPackId]);
 
   useEffect(() => {
     const socket = getSocket();
@@ -41,7 +70,10 @@ export function HomeClient() {
   const createRoom = () => {
     setError(null);
     const socket = getSocket();
-    socket.emit("room:create", { nickname: createName }, (result) => {
+    socket.emit(
+      "room:create",
+      { nickname: createName, wordPackId: selectedWordPackId },
+      (result) => {
       if (!result.roomCode) {
         return;
       }
@@ -50,7 +82,8 @@ export function HomeClient() {
       startTransition(() => {
         router.push(`/room/${result.roomCode}`);
       });
-    });
+      },
+    );
   };
 
   const joinRoom = () => {
@@ -115,6 +148,17 @@ export function HomeClient() {
               placeholder="Your nickname"
               className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-ink outline-none transition focus:border-accent"
             />
+            <select
+              value={selectedWordPackId}
+              onChange={(event) => setSelectedWordPackId(event.target.value)}
+              className="w-full rounded-2xl border border-black/10 bg-white px-4 py-3 text-ink outline-none transition focus:border-accent"
+            >
+              {wordPacks.map((pack) => (
+                <option key={pack.id} value={pack.id}>
+                  {pack.name} • {pack.category} • {pack.pairCount} pairs
+                </option>
+              ))}
+            </select>
             <button
               onClick={createRoom}
               disabled={isPending || createName.trim().length < 2}
