@@ -1,9 +1,9 @@
-import React from "react";
+import React from "react"
 
 type HeroStatProps = {
-  label: string;
-  value: string;
-};
+  label: string
+  value: string
+}
 
 export function HeroStat({ label, value }: HeroStatProps) {
   return (
@@ -11,5 +11,5 @@ export function HeroStat({ label, value }: HeroStatProps) {
       <p className="text-sm uppercase tracking-wide text-[#f0cfaa]">{label}</p>
       <p className="mt-2 text-3xl font-semibold text-white">{value}</p>
     </div>
-  );
+  )
 }

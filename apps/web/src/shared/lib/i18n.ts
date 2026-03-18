@@ -1,8 +1,8 @@
-import type { ServerErrorPayload } from "@undercover/shared";
+import type { ServerErrorPayload } from "@undercover/shared"
 
-import type { AppLocale } from "./locale";
+import type { AppLocale } from "./locale"
 
-type Vars = Record<string, string | number>;
+type Vars = Record<string, string | number>
 
 const messages = {
   en: {
@@ -94,8 +94,7 @@ const messages = {
     roundSkipped: "Round skipped",
     reconnecting: "Reconnecting…",
     sessionNotActive: "Session not active",
-    noLocalSession:
-      "No local session found for this room. Join from the home screen to enter.",
+    noLocalSession: "No local session found for this room. Join from the home screen to enter.",
     roomCouldNotBeRestored: "This room could not be restored.",
     backHome: "Back home",
     phaseLobby: "Lobby",
@@ -114,7 +113,8 @@ const messages = {
     votedOutReveal: "Voted out in the deciding reveal.",
     skipResultReason:
       "The room chose to skip, so nobody was eliminated and another clue round started.",
-    revealResultReason: "{undercover} was the Undercover. Votes are now revealed for the completed round.",
+    revealResultReason:
+      "{undercover} was the Undercover. Votes are now revealed for the completed round.",
     revealResultFallback: "Votes are now revealed for the completed round.",
     readyForAnotherMatch: "Ready for another match?",
     restartHint: "Start a fresh round with the same room.",
@@ -154,8 +154,7 @@ const messages = {
     myanmar: "မြန်မာ",
     realtimePartyGame: "အွန်လိုင်း ပါတီဂိမ်း",
     title: "အန်ဒါကာဗာ",
-    homeSubtitle:
-      "အခန်းဖွင့်ပါ၊ လျှို့ဝှက်စကားလုံးတွေဝေပါ၊ clue တွေဖလှယ်ပါ၊ နည်းနည်းမတူသလို ထင်ရတဲ့သူကို မဲပေးထုတ်ပါ။",
+    homeSubtitle: "အခန်းဖွင့်ပါ၊ လျှို့ဝှက်စကားလုံးတွေဝေပါ၊ clue တွေဖလှယ်ပါ၊ နည်းနည်းမတူသလို ထင်ရတဲ့သူကို မဲပေးထုတ်ပါ။",
     players: "ကစားသမား",
     rounds: "အလှည့်များ",
     endless: "ဆက်တိုက်",
@@ -288,7 +287,7 @@ const messages = {
     NOT_YOUR_TURN: "သဲလွန်စတင်ရန် သင့်အလှည့်ကို စောင့်ပါ။",
     PLAYER_NOT_FOUND: "ကစားသမား session ကို ပြန်မယူနိုင်ပါ။",
   },
-} as const;
+} as const
 
 const packLabels = {
   classic: { en: ["Classic", "General"], my: ["အခြေခံ", "အထွေထွေ"] },
@@ -302,24 +301,20 @@ const packLabels = {
   "hard-mode": { en: ["Hard Mode", "Advanced"], my: ["ခက်ခဲမုဒ်", "အဆင့်မြင့်"] },
   "family-fun": { en: ["Family Fun", "Family"], my: ["မိသားစု ဖျော်ဖြေမှု", "မိသားစု"] },
   "myanmar-classic": { en: ["Classic", "General"], my: ["အခြေခံ", "မြန်မာ"] },
-} as const;
+} as const
 
-export function t(
-  locale: AppLocale,
-  key: keyof typeof messages.en,
-  vars?: Vars,
-): string {
-  const template = String(messages[locale][key] ?? messages.en[key]);
+export function t(locale: AppLocale, key: keyof typeof messages.en, vars?: Vars): string {
+  const template = String(messages[locale][key] ?? messages.en[key])
   if (!vars) {
-    return template;
+    return template
   }
 
-  let output = template;
+  let output = template
   for (const [name, value] of Object.entries(vars)) {
-    output = output.replaceAll(`{${name}}`, String(value));
+    output = output.replaceAll(`{${name}}`, String(value))
   }
 
-  return output;
+  return output
 }
 
 export function translateError(
@@ -327,19 +322,19 @@ export function translateError(
   payload: Pick<ServerErrorPayload, "code" | "message"> | null,
 ): string | null {
   if (!payload) {
-    return null;
+    return null
   }
 
-  return t(locale, payload.code);
+  return t(locale, payload.code)
 }
 
 export function formatPackLabel(
   locale: AppLocale,
   pack: { id: string; name: string; category: string; pairCount: number },
 ): string {
-  const labels = packLabels[pack.id as keyof typeof packLabels];
-  const [name, category] = labels?.[locale] ?? [pack.name, pack.category];
+  const labels = packLabels[pack.id as keyof typeof packLabels]
+  const [name, category] = labels?.[locale] ?? [pack.name, pack.category]
   return locale === "my"
     ? `${name} • ${category} • ${pack.pairCount} စုံ`
-    : `${name} • ${category} • ${pack.pairCount} pairs`;
+    : `${name} • ${category} • ${pack.pairCount} pairs`
 }

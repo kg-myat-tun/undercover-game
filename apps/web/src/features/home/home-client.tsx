@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import React from "react";
+import React from "react"
 
-import { HomeClientView } from "./components/organisms/home-client-view";
-import { useHomeClientState } from "./hooks/use-home-client-state";
+import { HomeClientView } from "./components/organisms/home-client-view"
+import { useHomeClientState } from "./hooks/use-home-client-state"
 
 export function HomeClient() {
-  const state = useHomeClientState();
+  const state = useHomeClientState()
 
-  return <HomeClientView {...state} />;
+  return <HomeClientView {...state} />
 }

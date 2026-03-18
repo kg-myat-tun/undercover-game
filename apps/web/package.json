@@ -8,7 +8,8 @@
     "build": "next build",
     "start": "next start",
     "test": "vitest run",
-    "lint": "next lint"
+    "lint": "biome check src next-env.d.ts vitest.config.ts",
+    "format": "biome format --write src next-env.d.ts vitest.config.ts"
   },
   "dependencies": {
     "@undercover/shared": "0.1.0",

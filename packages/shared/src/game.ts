@@ -1,24 +1,24 @@
-export type { Role } from "./game-types.js";
+export type { Role } from "./game-types.js"
 
 export {
   createEmptyRound,
   getActivePlayers,
-  toPublicRoom
-} from "./game-core.js";
+  toPublicRoom,
+} from "./game-core.js"
 export {
   chooseUndercover,
   createRound,
-  shufflePlayers
-} from "./round-factory.js";
-export { submitClue } from "./clue-policy.js";
+  shufflePlayers,
+} from "./round-factory.js"
+export { submitClue } from "./clue-policy.js"
 export {
   allVotesSubmitted,
   continueRound,
   finalizeRound,
   resolveVotes,
-  submitVote
-} from "./vote-policy.js";
+  submitVote,
+} from "./vote-policy.js"
 export {
   determineOutcome,
-  getRoleForPlayer
-} from "./outcome-policy.js";
+  getRoleForPlayer,
+} from "./outcome-policy.js"

@@ -1,15 +1,15 @@
-"use client";
+"use client"
 
-import React from "react";
-import clsx from "clsx";
+import clsx from "clsx"
+import React from "react"
 
-import { formatPackLabel, t } from "../../../../shared/lib/i18n";
-import { Card } from "../../../../shared/ui/atoms/card";
-import { HeroStat } from "../molecules/hero-stat";
-import type { HomeClientState } from "../../hooks/use-home-client-state";
+import { formatPackLabel, t } from "../../../../shared/lib/i18n"
+import { Card } from "../../../../shared/ui/atoms/card"
+import type { HomeClientState } from "../../hooks/use-home-client-state"
+import { HeroStat } from "../molecules/hero-stat"
 
 function isEnterKey(event: { key: string }) {
-  return event.key === "Enter";
+  return event.key === "Enter"
 }
 
 export function HomeClientView({
@@ -27,17 +27,17 @@ export function HomeClientView({
   error,
   isPending,
   createRoom,
-  joinRoom
+  joinRoom,
 }: HomeClientState) {
-  const isMyanmar = locale === "my";
+  const isMyanmar = locale === "my"
   const heroLabelClass = clsx(
     "text-sm text-[#f4d9bb]/85",
-    isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.35em]"
-  );
+    isMyanmar ? "tracking-[0.05em]" : "uppercase tracking-[0.35em]",
+  )
   const sectionLabelClass = clsx(
     "text-xs font-semibold text-ink/55",
-    isMyanmar ? "tracking-[0.04em]" : "uppercase tracking-[0.3em]"
-  );
+    isMyanmar ? "tracking-[0.04em]" : "uppercase tracking-[0.3em]",
+  )
 
   return (
     <main className="mx-auto flex min-h-screen max-w-6xl flex-col justify-center px-4 py-12">
@@ -53,15 +53,31 @@ export function HomeClientView({
                   onChange={(event) => setLocale(event.target.value === "my" ? "my" : "en")}
                   className="bg-transparent outline-none"
                 >
-                  <option className="text-black" value="en">{t(locale, "english")}</option>
-                  <option className="text-black" value="my">{t(locale, "myanmar")}</option>
+                  <option className="text-black" value="en">
+                    {t(locale, "english")}
+                  </option>
+                  <option className="text-black" value="my">
+                    {t(locale, "myanmar")}
+                  </option>
                 </select>
               </label>
             </div>
-            <h1 className={clsx("text-[#fff7ec]", isMyanmar ? "text-[1.85rem] font-semibold leading-[1.35] md:text-[2.2rem]" : "font-display text-5xl leading-none md:text-7xl")}>
+            <h1
+              className={clsx(
+                "text-[#fff7ec]",
+                isMyanmar
+                  ? "text-[1.85rem] font-semibold leading-[1.35] md:text-[2.2rem]"
+                  : "font-display text-5xl leading-none md:text-7xl",
+              )}
+            >
               {t(locale, "title")}
             </h1>
-            <p className={clsx("max-w-xl text-[#f7ebda]/90", isMyanmar ? "text-[0.98rem] leading-8" : "text-lg leading-8")}>
+            <p
+              className={clsx(
+                "max-w-xl text-[#f7ebda]/90",
+                isMyanmar ? "text-[0.98rem] leading-8" : "text-lg leading-8",
+              )}
+            >
               {t(locale, "homeSubtitle")}
             </p>
           </div>
@@ -77,7 +93,12 @@ export function HomeClientView({
           <Card className="space-y-4 bg-white/92">
             <div>
               <p className={sectionLabelClass}>{t(locale, "hostRoom")}</p>
-              <h2 className={clsx("mt-2 font-semibold", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-3xl")}>
+              <h2
+                className={clsx(
+                  "mt-2 font-semibold",
+                  isMyanmar ? "text-[2rem] leading-[1.2]" : "text-3xl",
+                )}
+              >
                 {t(locale, "startSuspicion")}
               </h2>
             </div>
@@ -86,16 +107,22 @@ export function HomeClientView({
               onChange={(event) => setCreateName(event.target.value)}
               onKeyDown={(event) => {
                 if (isEnterKey(event) && createName.trim().length >= 2 && !isPending) {
-                  createRoom();
+                  createRoom()
                 }
               }}
               placeholder={t(locale, "yourNickname")}
-              className={clsx("w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent", isMyanmar ? "py-4 text-lg" : "py-3")}
+              className={clsx(
+                "w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent",
+                isMyanmar ? "py-4 text-lg" : "py-3",
+              )}
             />
             <select
               value={selectedWordPackId}
               onChange={(event) => setSelectedWordPackId(event.target.value)}
-              className={clsx("w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent", isMyanmar ? "py-4 text-lg" : "py-3")}
+              className={clsx(
+                "w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent",
+                isMyanmar ? "py-4 text-lg" : "py-3",
+              )}
             >
               {visibleWordPacks.map((pack) => (
                 <option key={pack.id} value={pack.id}>
@@ -104,9 +131,13 @@ export function HomeClientView({
               ))}
             </select>
             <button
+              type="button"
               onClick={createRoom}
               disabled={isPending || createName.trim().length < 2}
-              className={clsx("rounded-2xl bg-accent px-4 font-semibold text-white transition hover:bg-[#d65f43]", isMyanmar ? "py-4 text-lg" : "py-3")}
+              className={clsx(
+                "rounded-2xl bg-accent px-4 font-semibold text-white transition hover:bg-[#d65f43]",
+                isMyanmar ? "py-4 text-lg" : "py-3",
+              )}
             >
               {t(locale, "createRoom")}
             </button>
@@ -115,12 +146,22 @@ export function HomeClientView({
           <Card className="space-y-4 bg-white/92">
             <div>
               <p className={sectionLabelClass}>{t(locale, "joinRoomTitle")}</p>
-              <h2 className={clsx("mt-2 font-semibold", isMyanmar ? "text-[2rem] leading-[1.2]" : "text-3xl")}>
+              <h2
+                className={clsx(
+                  "mt-2 font-semibold",
+                  isMyanmar ? "text-[2rem] leading-[1.2]" : "text-3xl",
+                )}
+              >
                 {t(locale, "blendQuickly")}
               </h2>
             </div>
             {joinCode ? (
-              <div className={clsx("rounded-2xl border border-mint/35 bg-mint/15 px-4 text-ink/80", isMyanmar ? "py-4 text-base leading-8" : "py-3 text-sm")}>
+              <div
+                className={clsx(
+                  "rounded-2xl border border-mint/35 bg-mint/15 px-4 text-ink/80",
+                  isMyanmar ? "py-4 text-base leading-8" : "py-3 text-sm",
+                )}
+              >
                 {t(locale, "invitationReady", { roomCode: joinCode })}
               </div>
             ) : null}
@@ -128,28 +169,48 @@ export function HomeClientView({
               value={joinName}
               onChange={(event) => setJoinName(event.target.value)}
               onKeyDown={(event) => {
-                if (isEnterKey(event) && joinName.trim().length >= 2 && joinCode.trim().length >= 4 && !isPending) {
-                  joinRoom();
+                if (
+                  isEnterKey(event) &&
+                  joinName.trim().length >= 2 &&
+                  joinCode.trim().length >= 4 &&
+                  !isPending
+                ) {
+                  joinRoom()
                 }
               }}
               placeholder={t(locale, "yourNickname")}
-              className={clsx("w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent", isMyanmar ? "py-4 text-lg" : "py-3")}
+              className={clsx(
+                "w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent",
+                isMyanmar ? "py-4 text-lg" : "py-3",
+              )}
             />
             <input
               value={joinCode}
               onChange={(event) => setJoinCode(event.target.value.toUpperCase())}
               onKeyDown={(event) => {
-                if (isEnterKey(event) && joinName.trim().length >= 2 && joinCode.trim().length >= 4 && !isPending) {
-                  joinRoom();
+                if (
+                  isEnterKey(event) &&
+                  joinName.trim().length >= 2 &&
+                  joinCode.trim().length >= 4 &&
+                  !isPending
+                ) {
+                  joinRoom()
                 }
               }}
               placeholder={t(locale, "roomCode")}
-              className={clsx("w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent", isMyanmar ? "py-4 text-lg" : "py-3 uppercase")}
+              className={clsx(
+                "w-full rounded-2xl border border-black/10 bg-white px-4 text-ink outline-none transition focus:border-accent",
+                isMyanmar ? "py-4 text-lg" : "py-3 uppercase",
+              )}
             />
             <button
+              type="button"
               onClick={joinRoom}
               disabled={isPending || joinName.trim().length < 2 || joinCode.trim().length < 4}
-              className={clsx("rounded-2xl bg-mint px-4 font-semibold text-ink transition hover:bg-[#5a9f78]", isMyanmar ? "py-4 text-lg" : "py-3")}
+              className={clsx(
+                "rounded-2xl bg-mint px-4 font-semibold text-ink transition hover:bg-[#5a9f78]",
+                isMyanmar ? "py-4 text-lg" : "py-3",
+              )}
             >
               {t(locale, "joinRoom")}
             </button>
@@ -158,5 +219,5 @@ export function HomeClientView({
         </div>
       </div>
     </main>
-  );
+  )
 }

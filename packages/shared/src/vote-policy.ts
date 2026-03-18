@@ -1,18 +1,13 @@
-import type {
-  RoundOutcome,
-  RoundState,
-  Room,
-  VoteResolutionReason
-} from "./schemas.js";
+import type { Room, RoundOutcome, RoundState, VoteResolutionReason } from "./schemas.js"
 
-import { getRoleForPlayer } from "./outcome-policy.js";
-import { getSafeCounter } from "./game-core.js";
-import { determineOutcome } from "./outcome-policy.js";
+import { getSafeCounter } from "./game-core.js"
+import { getRoleForPlayer } from "./outcome-policy.js"
+import { determineOutcome } from "./outcome-policy.js"
 
 export function submitVote(
   round: RoundState,
   voterId: string,
-  targetPlayerId: string | null
+  targetPlayerId: string | null,
 ): RoundState {
   return {
     ...round,
@@ -21,79 +16,81 @@ export function submitVote(
       {
         voterId,
         targetPlayerId,
-        submittedAt: Date.now()
-      }
-    ]
-  };
+        submittedAt: Date.now(),
+      },
+    ],
+  }
 }
 
 export function allVotesSubmitted(round: RoundState): boolean {
-  return round.votes.length >= round.activePlayerIds.length;
+  return round.votes.length >= round.activePlayerIds.length
 }
 
 export function resolveVotes(round: RoundState): {
-  eliminatedPlayerId: string | null;
-  reason: VoteResolutionReason;
+  eliminatedPlayerId: string | null
+  reason: VoteResolutionReason
 } {
-  const counts = new Map<string, number>();
-  let skipVotes = 0;
+  const counts = new Map<string, number>()
+  let skipVotes = 0
 
   for (const vote of round.votes) {
     if (vote.targetPlayerId === null) {
-      skipVotes += 1;
-      continue;
+      skipVotes += 1
+      continue
     }
 
-    counts.set(vote.targetPlayerId, (counts.get(vote.targetPlayerId) ?? 0) + 1);
+    counts.set(vote.targetPlayerId, (counts.get(vote.targetPlayerId) ?? 0) + 1)
   }
 
   const ranked = [...counts.entries()].sort((left, right) => {
     if (right[1] !== left[1]) {
-      return right[1] - left[1];
+      return right[1] - left[1]
     }
 
-    return left[0].localeCompare(right[0]);
-  });
+    return left[0].localeCompare(right[0])
+  })
 
-  const [eliminatedPlayerId, votes] = ranked[0] ?? [null, 0];
-  const nextEntry = ranked[1];
+  const [eliminatedPlayerId, votes] = ranked[0] ?? [null, 0]
+  const nextEntry = ranked[1]
 
   if (votes === 0 || skipVotes >= votes) {
     return {
       eliminatedPlayerId: null,
-      reason: "vote-skipped"
-    };
+      reason: "vote-skipped",
+    }
   }
 
   if (nextEntry && nextEntry[1] === votes) {
     return {
       eliminatedPlayerId: null,
-      reason: "tie"
-    };
+      reason: "tie",
+    }
   }
 
   return {
     eliminatedPlayerId,
-    reason: "eliminated"
-  };
+    reason: "eliminated",
+  }
 }
 
 export function finalizeRound(room: Room): Room {
-  const resolvedAt = Date.now();
-  const currentGameNumber = getSafeCounter(room.round.gameNumber, 1);
-  const currentRoundNumber = getSafeCounter(room.round.roundNumber, 1);
-  const voteResolution = resolveVotes(room.round);
+  const resolvedAt = Date.now()
+  const currentGameNumber = getSafeCounter(room.round.gameNumber, 1)
+  const currentRoundNumber = getSafeCounter(room.round.roundNumber, 1)
+  const voteResolution = resolveVotes(room.round)
   const activePlayerIds =
     voteResolution.eliminatedPlayerId === null
       ? room.round.activePlayerIds
-      : room.round.activePlayerIds.filter((playerId) => playerId !== voteResolution.eliminatedPlayerId);
+      : room.round.activePlayerIds.filter(
+          (playerId) => playerId !== voteResolution.eliminatedPlayerId,
+        )
 
   const outcome = determineOutcome({
     ...room.round,
     activePlayerIds,
     eliminatedPlayerId: voteResolution.eliminatedPlayerId,
-    currentTurnPlayerId: null
-  });
+    currentTurnPlayerId: null,
+  })
 
   const updatedRound: RoundState = {
     ...room.round,
@@ -106,31 +103,31 @@ export function finalizeRound(room: Room): Room {
     currentTurnPlayerId: null,
     clues: room.round.clues,
     votes: room.round.votes,
-    outcome
-  };
+    outcome,
+  }
 
-  const scoreboard = { ...room.scoreboard };
+  const scoreboard = { ...room.scoreboard }
   const players = room.players.map((player) =>
     player.id === voteResolution.eliminatedPlayerId
       ? {
           ...player,
-          eliminatedAt: player.eliminatedAt ?? resolvedAt
+          eliminatedAt: player.eliminatedAt ?? resolvedAt,
         }
-      : player
-  );
+      : player,
+  )
 
   if (updatedRound.outcome) {
     for (const player of room.players) {
       if (!scoreboard[player.id]) {
-        scoreboard[player.id] = 0;
+        scoreboard[player.id] = 0
       }
 
-      const role = getRoleForPlayer(updatedRound, player.id);
+      const role = getRoleForPlayer(updatedRound, player.id)
       if (
         (updatedRound.outcome.winner === "civilians" && role === "civilian") ||
         (updatedRound.outcome.winner === "undercover" && role === "undercover")
       ) {
-        scoreboard[player.id] += 1;
+        scoreboard[player.id] += 1
       }
     }
   }
@@ -139,13 +136,13 @@ export function finalizeRound(room: Room): Room {
     ...room,
     players,
     round: updatedRound,
-    scoreboard
-  };
+    scoreboard,
+  }
 }
 
 export function continueRound(room: Room): Room {
-  const currentGameNumber = getSafeCounter(room.round.gameNumber, 1);
-  const currentRoundNumber = getSafeCounter(room.round.roundNumber, 1);
+  const currentGameNumber = getSafeCounter(room.round.gameNumber, 1)
+  const currentRoundNumber = getSafeCounter(room.round.roundNumber, 1)
 
   return {
     ...room,
@@ -159,7 +156,7 @@ export function continueRound(room: Room): Room {
       votes: [],
       eliminatedPlayerId: null,
       resolutionReason: null,
-      outcome: null
-    }
-  };
+      outcome: null,
+    },
+  }
 }

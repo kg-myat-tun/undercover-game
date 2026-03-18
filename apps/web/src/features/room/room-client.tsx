@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import React from "react";
+import React from "react"
 
-import { RoomClientView } from "./components/organisms/room-client-view";
-import { useRoomClientState } from "./hooks/use-room-client-state";
+import { RoomClientView } from "./components/organisms/room-client-view"
+import { useRoomClientState } from "./hooks/use-room-client-state"
 
 type RoomClientProps = {
-  roomCode: string;
-};
+  roomCode: string
+}
 
 export function RoomClient({ roomCode }: RoomClientProps) {
-  const state = useRoomClientState(roomCode);
+  const state = useRoomClientState(roomCode)
 
-  return <RoomClientView {...state} />;
+  return <RoomClientView {...state} />
 }

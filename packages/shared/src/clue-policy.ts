@@ -1,4 +1,4 @@
-import type { RoundState } from "./schemas.js";
+import type { RoundState } from "./schemas.js"
 
 export function submitClue(round: RoundState, playerId: string, clue: string): RoundState {
   const nextClues = [
@@ -6,20 +6,20 @@ export function submitClue(round: RoundState, playerId: string, clue: string): R
     {
       playerId,
       clue,
-      submittedAt: Date.now()
-    }
-  ];
+      submittedAt: Date.now(),
+    },
+  ]
 
-  const currentIndex = round.activePlayerIds.findIndex((id) => id === playerId);
+  const currentIndex = round.activePlayerIds.findIndex((id) => id === playerId)
   const nextTurnPlayerId =
     currentIndex >= 0 && currentIndex < round.activePlayerIds.length - 1
       ? round.activePlayerIds[currentIndex + 1]
-      : null;
+      : null
 
   return {
     ...round,
     clues: nextClues,
     currentTurnPlayerId: nextTurnPlayerId,
-    phase: nextTurnPlayerId ? "clue-entry" : "voting"
-  };
+    phase: nextTurnPlayerId ? "clue-entry" : "voting",
+  }
 }

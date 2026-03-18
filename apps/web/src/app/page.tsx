@@ -1,5 +1,11 @@
-import { HomeClient } from "../features/home/home-client";
+import { Suspense } from "react"
+
+import { HomeClient } from "../features/home/home-client"
 
 export default function HomePage() {
-  return <HomeClient />;
+  return (
+    <Suspense fallback={null}>
+      <HomeClient />
+    </Suspense>
+  )
 }

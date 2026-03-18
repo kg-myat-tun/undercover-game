@@ -1,17 +1,23 @@
 {
   "name": "undercover",
   "private": true,
+  "packageManager": "bun@1.3.9",
   "version": "0.1.0",
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": ["apps/*", "packages/*"],
   "scripts": {
-    "build:shared": "bun run --filter @undercover/shared build",
-    "build": "bun run build:shared && bun run --filter @undercover/server build && bun run --filter @undercover/web build",
-    "dev:web": "bun run build:shared && bun run --filter @undercover/web dev",
-    "dev:server": "bun run build:shared && bun run --filter @undercover/server start:dev",
-    "test": "bun run build:shared && bun run --filter @undercover/shared test && bun run --filter @undercover/server test && bun run --filter @undercover/web test",
-    "lint": "bun run --filter '*' lint"
+    "build:shared": "turbo run build --filter=@undercover/shared",
+    "build": "turbo run build",
+    "dev": "turbo run dev --parallel",
+    "dev:web": "turbo run dev --filter=@undercover/web",
+    "dev:server": "turbo run dev --filter=@undercover/server",
+    "test": "turbo run test",
+    "lint": "turbo run lint",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "check": "biome check ."
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "turbo": "^2.5.0"
   }
 }

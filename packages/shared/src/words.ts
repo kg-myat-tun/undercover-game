@@ -1,33 +1,33 @@
 export type WordPair = {
-  civilian: string;
-  undercover: string;
-};
+  civilian: string
+  undercover: string
+}
 
 export type WordPack = {
-  id: string;
-  name: string;
-  locale: string;
-  category: string;
-  pairs: WordPair[];
-};
+  id: string
+  name: string
+  locale: string
+  category: string
+  pairs: WordPair[]
+}
 
-export type SupportedWordLocale = "en" | "my";
+export type SupportedWordLocale = "en" | "my"
 
 export type WordPackLibraryEntry = {
-  id: string;
-  variants: Partial<Record<SupportedWordLocale, Omit<WordPack, "id" | "locale">>>;
-};
+  id: string
+  variants: Partial<Record<SupportedWordLocale, Omit<WordPack, "id" | "locale">>>
+}
 
 export type WordPackSummary = {
-  id: string;
-  name: string;
-  category: string;
-  pairCount: number;
-  availableLocales: SupportedWordLocale[];
-};
+  id: string
+  name: string
+  category: string
+  pairCount: number
+  availableLocales: SupportedWordLocale[]
+}
 
 function pairs(entries: Array<[string, string]>): WordPair[] {
-  return entries.map(([civilian, undercover]) => ({ civilian, undercover }));
+  return entries.map(([civilian, undercover]) => ({ civilian, undercover }))
 }
 
 const classicPairs = pairs([
@@ -130,8 +130,8 @@ const classicPairs = pairs([
   ["Ladder", "Stairs"],
   ["Pineapple", "Coconut"],
   ["Crown", "Tiara"],
-  ["Glove", "Mittens"]
-]);
+  ["Glove", "Mittens"],
+])
 
 const cityLifePairs = pairs([
   ["Taxi", "Subway"],
@@ -233,8 +233,8 @@ const cityLifePairs = pairs([
   ["Public fountain", "Memorial"],
   ["Park gate", "Building gate"],
   ["Rooftop garden", "Courtyard garden"],
-  ["Crosswalk button", "Doorbell"]
-]);
+  ["Crosswalk button", "Doorbell"],
+])
 
 const foodDrinkPairs = pairs([
   ["Pancake", "Waffle"],
@@ -336,8 +336,8 @@ const foodDrinkPairs = pairs([
   ["Raisin", "Date"],
   ["Berry jam", "Fruit jelly"],
   ["Churro", "Donut"],
-  ["Fried rice", "Paella"]
-]);
+  ["Fried rice", "Paella"],
+])
 
 const travelNaturePairs = pairs([
   ["Island", "Peninsula"],
@@ -439,8 +439,8 @@ const travelNaturePairs = pairs([
   ["Camp chair", "Beach stool"],
   ["Travel pouch", "Passport holder"],
   ["Forest cabin", "Lake house"],
-  ["River ferry", "Speedboat"]
-]);
+  ["River ferry", "Speedboat"],
+])
 
 const techMediaPairs = pairs([
   ["Keyboard", "Piano"],
@@ -542,8 +542,8 @@ const techMediaPairs = pairs([
   ["Robot vacuum", "Smart speaker"],
   ["Plug-in", "Extension"],
   ["Status light", "Indicator light"],
-  ["Typing sound", "Click sound"]
-]);
+  ["Typing sound", "Click sound"],
+])
 
 const sportsHobbiesPairs = pairs([
   ["Football", "Rugby"],
@@ -645,8 +645,8 @@ const sportsHobbiesPairs = pairs([
   ["Costume", "Uniform"],
   ["Croquet", "Bocce"],
   ["Foam roller", "Yoga mat"],
-  ["Sketchbook", "Canvas pad"]
-]);
+  ["Sketchbook", "Canvas pad"],
+])
 
 const schoolWorkPairs = pairs([
   ["Teacher", "Professor"],
@@ -748,8 +748,8 @@ const schoolWorkPairs = pairs([
   ["Homework folder", "Lunch box"],
   ["Company email", "Memo"],
   ["Desk organizer", "Supply tray"],
-  ["Workshop room", "Conference room"]
-]);
+  ["Workshop room", "Conference room"],
+])
 
 const homeDailyPairs = pairs([
   ["Sofa", "Armchair"],
@@ -851,8 +851,8 @@ const homeDailyPairs = pairs([
   ["Laundry clips", "Hangers"],
   ["Kitchen timer", "Egg timer"],
   ["Porch", "Patio"],
-  ["Entryway", "Hallway"]
-]);
+  ["Entryway", "Hallway"],
+])
 
 const hardModePairs = pairs([
   ["Violin", "Viola"],
@@ -954,8 +954,8 @@ const hardModePairs = pairs([
   ["Carafe", "Decanter"],
   ["Etching", "Engraving"],
   ["Citadel", "Fortress"],
-  ["Reticle", "Crosshair"]
-]);
+  ["Reticle", "Crosshair"],
+])
 
 const familyFunPairs = pairs([
   ["Cat", "Dog"],
@@ -1057,8 +1057,8 @@ const familyFunPairs = pairs([
   ["Beach bucket", "Watering can"],
   ["Toy phone", "Toy camera"],
   ["Rainbow slide", "Ferris wheel"],
-  ["Toy shovel", "Toy rake"]
-]);
+  ["Toy shovel", "Toy rake"],
+])
 
 const myanmarClassicPairs = pairs([
   ["လက်ဖက်ရည်", "ကော်ဖီ"],
@@ -1160,8 +1160,8 @@ const myanmarClassicPairs = pairs([
   ["တင်းနစ်", "ကြက်တောင်"],
   ["ကဒ်", "ဒိုင်စ်"],
   ["ပွဲတော်", "ချီတက်ပွဲ"],
-  ["မိုးကာ", "ထီး"]
-]);
+  ["မိုးကာ", "ထီး"],
+])
 
 const myanmarCityLifePairs = pairs([
   ["တက္ကစီ", "မြေအောက်ရထား"],
@@ -1263,8 +1263,8 @@ const myanmarCityLifePairs = pairs([
   ["အများသုံးရေပန်း", "အမှတ်တရကျောက်တိုင်"],
   ["ပန်းခြံဂိတ်", "အဆောက်အဦဂိတ်"],
   ["ခေါင်မိုးပေါ်ဥယျာဉ်", "ဝင်းအတွင်းဥယျာဉ်"],
-  ["လမ်းကူးခလုတ်", "တံခါးခေါ်ခလုတ်"]
-]);
+  ["လမ်းကူးခလုတ်", "တံခါးခေါ်ခလုတ်"],
+])
 
 const myanmarFoodDrinkPairs = pairs([
   ["မုန့်ပြား", "ဝါဖယ်"],
@@ -1366,8 +1366,8 @@ const myanmarFoodDrinkPairs = pairs([
   ["ခြောက်သွေ့စပျစ်", "စွယ်သီးခြောက်"],
   ["ဘယ်ရီယို", "သစ်သီးဂျယ်လီ"],
   ["ချူရို", "ဒိုးနပ်"],
-  ["ထမင်းကြော်", "ပါအယ်လာ"]
-]);
+  ["ထမင်းကြော်", "ပါအယ်လာ"],
+])
 
 const myanmarHomeDailyPairs = pairs([
   ["ဆိုဖာ", "လက်တင်ခုံ"],
@@ -1469,8 +1469,8 @@ const myanmarHomeDailyPairs = pairs([
   ["အဝတ်ကလစ်", "အဝတ်ချိတ်"],
   ["မီးဖိုချောင်အချိန်တိုင်းစက်", "ကြက်ဥအချိန်တိုင်းစက်"],
   ["အိမ်ရှေ့ဝင်ပေါက်", "အပြင်ဘက်ထိုင်နေရာ"],
-  ["ဝင်ပေါက်ခန်း", "လျှောက်လမ်း"]
-]);
+  ["ဝင်ပေါက်ခန်း", "လျှောက်လမ်း"],
+])
 
 const myanmarTravelNaturePairs = pairs([
   ["ကျွန်း", "ကျွန်းဆွယ်"],
@@ -1571,8 +1571,8 @@ const myanmarTravelNaturePairs = pairs([
   ["လှိုင်းကန်", "လဂွန်း"],
   ["စခန်းထိုင်ခုံ", "ကမ်းခြေထိုင်ခုံလေး"],
   ["ခရီးဆောင်အိတ်ငယ်", "နိုင်ငံကူးလက်မှတ်အိတ်"],
-  ["တောအိမ်", "ရေအိုင်အိမ်"]
-]);
+  ["တောအိမ်", "ရေအိုင်အိမ်"],
+])
 
 const myanmarSportsHobbiesPairs = pairs([
   ["ဘောလုံး", "ရပ်ဂ်ဘီ"],
@@ -1674,8 +1674,8 @@ const myanmarSportsHobbiesPairs = pairs([
   ["အဝတ်အစား", "ယူနီဖောင်း"],
   ["ခရိုကေး", "ဘော့ချေ"],
   ["ဖိုမ်လှိမ့်တံ", "ယောဂဖျာ"],
-  ["စကက်ချ်စာအုပ်", "ကန်ဗတ်စာရွက်"]
-]);
+  ["စကက်ချ်စာအုပ်", "ကန်ဗတ်စာရွက်"],
+])
 
 const myanmarSchoolWorkPairs = pairs([
   ["ဆရာ", "ပါမောက္ခ"],
@@ -1777,8 +1777,8 @@ const myanmarSchoolWorkPairs = pairs([
   ["အိမ်စာဖိုင်တွဲ", "နေ့လယ်စာပုံး"],
   ["ကုမ္ပဏီအီးမေးလ်", "မှတ်စုစာ"],
   ["စားပွဲစီစဉ်ပုံး", "ပစ္စည်းထည့်စင်"],
-  ["အလုပ်ရုံခန်း", "အစည်းအဝေးခန်း"]
-]);
+  ["အလုပ်ရုံခန်း", "အစည်းအဝေးခန်း"],
+])
 
 const myanmarTechMediaPairs = pairs([
   ["ကီးဘုတ်", "စန္ဒယား"],
@@ -1880,8 +1880,8 @@ const myanmarTechMediaPairs = pairs([
   ["အလိုအလျောက်ဖုန်စုပ်စက်", "စမတ်စပီကာ"],
   ["ပလပ်အင်", "အပိုချဲ့ထွင်ချက်"],
   ["အခြေအနေမီး", "ညွှန်ပြမီး"],
-  ["ရိုက်သံ", "ကလစ်သံ"]
-]);
+  ["ရိုက်သံ", "ကလစ်သံ"],
+])
 
 const myanmarHardModePairs = pairs([
   ["ဗိုင်အိုလင်", "ဗီအိုလာ"],
@@ -1983,8 +1983,8 @@ const myanmarHardModePairs = pairs([
   ["ရေဘူးခွက်", "ဖန်ရေဘူး"],
   ["ထုရေးပန်းချီ", "ခြစ်ရေးပန်းချီ"],
   ["မြို့ခံတပ်", "ခံတပ်"],
-  ["မျက်နှာပြင်ပစ်မှတ်ညွှန်", "ချိန်ညှိပစ်မှတ်"]
-]);
+  ["မျက်နှာပြင်ပစ်မှတ်ညွှန်", "ချိန်ညှိပစ်မှတ်"],
+])
 
 const myanmarFamilyFunPairs = pairs([
   ["ကြောင်", "ခွေး"],
@@ -2087,151 +2087,153 @@ const myanmarFamilyFunPairs = pairs([
   ["ကမ်းခြေပုံး", "ရေလောင်းဘူး"],
   ["ကစားစရာဖုန်း", "ကစားစရာကင်မရာ"],
   ["သက်တံလျှောစီး", "အဝိုင်းကြီးစီးစက်"],
-  ["ကစားစရာဂေါ်ပြား", "ကစားစရာတုတ်လှည်း"]
-]);
+  ["ကစားစရာဂေါ်ပြား", "ကစားစရာတုတ်လှည်း"],
+])
 
 export const wordPackLibrary: WordPackLibraryEntry[] = [
   {
     id: "classic",
     variants: {
       en: { name: "Classic", category: "General", pairs: classicPairs },
-      my: { name: "Myanmar Classic", category: "Myanmar", pairs: myanmarClassicPairs }
-    }
+      my: { name: "Myanmar Classic", category: "Myanmar", pairs: myanmarClassicPairs },
+    },
   },
   {
     id: "city-life",
     variants: {
       en: { name: "City Life", category: "Lifestyle", pairs: cityLifePairs },
-      my: { name: "မြို့ပြဘဝ", category: "နေ့စဉ်ဘဝ", pairs: myanmarCityLifePairs }
-    }
+      my: { name: "မြို့ပြဘဝ", category: "နေ့စဉ်ဘဝ", pairs: myanmarCityLifePairs },
+    },
   },
   {
     id: "food-drink",
     variants: {
       en: { name: "Food & Drink", category: "Cuisine", pairs: foodDrinkPairs },
-      my: { name: "အစားအသောက်", category: "စားသောက်မှု", pairs: myanmarFoodDrinkPairs }
-    }
+      my: { name: "အစားအသောက်", category: "စားသောက်မှု", pairs: myanmarFoodDrinkPairs },
+    },
   },
   {
     id: "travel-nature",
     variants: {
       en: { name: "Travel & Nature", category: "Outdoors", pairs: travelNaturePairs },
-      my: { name: "ခရီးသွား & သဘာဝ", category: "အပြင်ဘက်", pairs: myanmarTravelNaturePairs }
-    }
+      my: { name: "ခရီးသွား & သဘာဝ", category: "အပြင်ဘက်", pairs: myanmarTravelNaturePairs },
+    },
   },
   {
     id: "tech-media",
     variants: {
       en: { name: "Tech & Media", category: "Technology", pairs: techMediaPairs },
-      my: { name: "နည်းပညာ & မီဒီယာ", category: "နည်းပညာ", pairs: myanmarTechMediaPairs }
-    }
+      my: { name: "နည်းပညာ & မီဒီယာ", category: "နည်းပညာ", pairs: myanmarTechMediaPairs },
+    },
   },
   {
     id: "sports-hobbies",
     variants: {
       en: { name: "Sports & Hobbies", category: "Play", pairs: sportsHobbiesPairs },
-      my: { name: "အားကစား & ဝါသနာ", category: "ကစားမှု", pairs: myanmarSportsHobbiesPairs }
-    }
+      my: { name: "အားကစား & ဝါသနာ", category: "ကစားမှု", pairs: myanmarSportsHobbiesPairs },
+    },
   },
   {
     id: "school-work",
     variants: {
       en: { name: "School & Work", category: "Everyday", pairs: schoolWorkPairs },
-      my: { name: "ကျောင်း & အလုပ်", category: "နေ့စဉ်", pairs: myanmarSchoolWorkPairs }
-    }
+      my: { name: "ကျောင်း & အလုပ်", category: "နေ့စဉ်", pairs: myanmarSchoolWorkPairs },
+    },
   },
   {
     id: "home-daily",
     variants: {
       en: { name: "Home & Daily Life", category: "Home", pairs: homeDailyPairs },
-      my: { name: "အိမ် & နေ့စဉ်ဘဝ", category: "အိမ်", pairs: myanmarHomeDailyPairs }
-    }
+      my: { name: "အိမ် & နေ့စဉ်ဘဝ", category: "အိမ်", pairs: myanmarHomeDailyPairs },
+    },
   },
   {
     id: "hard-mode",
     variants: {
       en: { name: "Hard Mode", category: "Advanced", pairs: hardModePairs },
-      my: { name: "ခက်ခဲမုဒ်", category: "အဆင့်မြင့်", pairs: myanmarHardModePairs }
-    }
+      my: { name: "ခက်ခဲမုဒ်", category: "အဆင့်မြင့်", pairs: myanmarHardModePairs },
+    },
   },
   {
     id: "family-fun",
     variants: {
       en: { name: "Family Fun", category: "Family", pairs: familyFunPairs },
-      my: { name: "မိသားစု ဖျော်ဖြေမှု", category: "မိသားစု", pairs: myanmarFamilyFunPairs }
-    }
-  }
-];
+      my: { name: "မိသားစု ဖျော်ဖြေမှု", category: "မိသားစု", pairs: myanmarFamilyFunPairs },
+    },
+  },
+]
 
 const legacyPackAliases: Record<string, string> = {
-  "myanmar-classic": "classic"
-};
+  "myanmar-classic": "classic",
+}
 
 function normalizeLocale(locale?: string): SupportedWordLocale {
-  return locale === "my" ? "my" : "en";
+  return locale === "my" ? "my" : "en"
 }
 
 export function normalizeWordPackId(packId?: string): string {
   if (!packId) {
-    return "classic";
+    return "classic"
   }
 
-  return legacyPackAliases[packId] ?? packId;
+  return legacyPackAliases[packId] ?? packId
 }
 
-export function getDefaultWordPackId(locale: string = "en"): string {
-  return normalizeLocale(locale) === "my" ? "classic" : "classic";
+export function getDefaultWordPackId(locale = "en"): string {
+  return normalizeLocale(locale) === "my" ? "classic" : "classic"
 }
 
 export function getWordPackLibraryEntry(packId?: string): WordPackLibraryEntry | undefined {
-  const normalizedPackId = normalizeWordPackId(packId);
-  return wordPackLibrary.find((entry) => entry.id === normalizedPackId);
+  const normalizedPackId = normalizeWordPackId(packId)
+  return wordPackLibrary.find((entry) => entry.id === normalizedPackId)
 }
 
 export function isWordPackAvailableInLocale(packId: string, locale: string): boolean {
-  const entry = getWordPackLibraryEntry(packId);
-  const normalizedLocale = normalizeLocale(locale);
-  return Boolean(entry?.variants[normalizedLocale]);
+  const entry = getWordPackLibraryEntry(packId)
+  const normalizedLocale = normalizeLocale(locale)
+  return Boolean(entry?.variants[normalizedLocale])
 }
 
 export function listWordPacks(): WordPackSummary[] {
   return wordPackLibrary.map((entry) => {
-    const availableLocales = Object.keys(entry.variants) as SupportedWordLocale[];
-    const fallbackVariant = entry.variants.en ?? entry.variants[availableLocales[0]];
+    const availableLocales = Object.keys(entry.variants) as SupportedWordLocale[]
+    const fallbackVariant = entry.variants.en ?? entry.variants[availableLocales[0]]
 
     return {
       id: entry.id,
       name: fallbackVariant?.name ?? entry.id,
       category: fallbackVariant?.category ?? "General",
       pairCount: fallbackVariant?.pairs.length ?? 0,
-      availableLocales
-    };
-  });
+      availableLocales,
+    }
+  })
 }
 
-export const wordPacks: WordPackSummary[] = listWordPacks();
+export const wordPacks: WordPackSummary[] = listWordPacks()
 
-export function getWordPack(packId?: string, locale: string = "en"): WordPack {
-  const normalizedLocale = normalizeLocale(locale);
-  const defaultPackId = getDefaultWordPackId(normalizedLocale);
-  const defaultEntry = getWordPackLibraryEntry(defaultPackId) ?? wordPackLibrary[0];
-  const preferredEntry = getWordPackLibraryEntry(packId) ?? defaultEntry;
-  const preferredVariant = preferredEntry.variants[normalizedLocale];
+export function getWordPack(packId?: string, locale = "en"): WordPack {
+  const normalizedLocale = normalizeLocale(locale)
+  const defaultPackId = getDefaultWordPackId(normalizedLocale)
+  const defaultEntry = getWordPackLibraryEntry(defaultPackId) ?? wordPackLibrary[0]
+  const preferredEntry = getWordPackLibraryEntry(packId) ?? defaultEntry
+  const preferredVariant = preferredEntry.variants[normalizedLocale]
   const fallbackVariant =
     defaultEntry.variants[normalizedLocale] ??
     preferredEntry.variants.en ??
-    defaultEntry.variants.en;
-  const resolvedVariant = preferredVariant ?? fallbackVariant;
+    defaultEntry.variants.en
+  const resolvedVariant = preferredVariant ?? fallbackVariant
 
   if (!resolvedVariant) {
-    throw new Error(`No word pack variant available for pack "${preferredEntry.id}".`);
+    throw new Error(`No word pack variant available for pack "${preferredEntry.id}".`)
   }
 
   return {
     id: preferredVariant ? preferredEntry.id : defaultEntry.id,
-    locale: preferredVariant ? normalizedLocale : normalizeLocale(defaultEntry.variants.my ? "my" : "en"),
+    locale: preferredVariant
+      ? normalizedLocale
+      : normalizeLocale(defaultEntry.variants.my ? "my" : "en"),
     name: resolvedVariant.name,
     category: resolvedVariant.category,
-    pairs: resolvedVariant.pairs
-  };
+    pairs: resolvedVariant.pairs,
+  }
 }

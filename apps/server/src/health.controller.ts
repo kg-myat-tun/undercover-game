@@ -1,4 +1,4 @@
-import { Controller, Get } from "@nestjs/common";
+import { Controller, Get } from "@nestjs/common"
 
 @Controller()
 export class HealthController {
@@ -6,7 +6,7 @@ export class HealthController {
   health() {
     return {
       ok: true,
-      timestamp: Date.now()
-    };
+      timestamp: Date.now(),
+    }
   }
 }

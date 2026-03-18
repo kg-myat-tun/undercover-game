@@ -5,9 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "nest build",
+    "dev": "nest start --watch",
     "start:dev": "nest start --watch",
     "start": "node dist/main.js",
-    "test": "vitest run"
+    "test": "vitest run",
+    "lint": "biome check src test",
+    "format": "biome format --write src test"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.11",

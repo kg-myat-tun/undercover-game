@@ -1,33 +1,33 @@
-import type { Player, Room, RoundState } from "./schemas.js";
-import { getWordPack } from "./words.js";
+import type { Player, Room, RoundState } from "./schemas.js"
+import { getWordPack } from "./words.js"
 
-import { getSafeCounter } from "./game-core.js";
+import { getSafeCounter } from "./game-core.js"
 
 export function chooseUndercover(players: Player[], random = Math.random): Player {
-  const index = Math.floor(random() * players.length);
-  return players[index];
+  const index = Math.floor(random() * players.length)
+  return players[index]
 }
 
 export function shufflePlayers(players: Player[], random = Math.random): Player[] {
-  const copy = [...players];
+  const copy = [...players]
 
   for (let index = copy.length - 1; index > 0; index -= 1) {
-    const swapIndex = Math.floor(random() * (index + 1));
-    [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+    const swapIndex = Math.floor(random() * (index + 1))
+    ;[copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]]
   }
 
-  return copy;
+  return copy
 }
 
 export function createRound(room: Room, random = Math.random): RoundState {
-  const pack = getWordPack(room.wordPackId, room.locale);
-  const pair = pack.pairs[Math.floor(random() * pack.pairs.length)];
-  const orderedPlayers = shufflePlayers(room.players, random);
-  const undercover = chooseUndercover(orderedPlayers, random);
-  const previousGameNumber = getSafeCounter(room.round.gameNumber, 0);
+  const pack = getWordPack(room.wordPackId, room.locale)
+  const pair = pack.pairs[Math.floor(random() * pack.pairs.length)]
+  const orderedPlayers = shufflePlayers(room.players, random)
+  const undercover = chooseUndercover(orderedPlayers, random)
+  const previousGameNumber = getSafeCounter(room.round.gameNumber, 0)
 
   for (const player of room.players) {
-    player.eliminatedAt = null;
+    player.eliminatedAt = null
   }
 
   return {
@@ -43,6 +43,6 @@ export function createRound(room: Room, random = Math.random): RoundState {
     undercoverPlayerId: undercover.id,
     civilianWord: pair.civilian,
     undercoverWord: pair.undercover,
-    outcome: null
-  };
+    outcome: null,
+  }
 }

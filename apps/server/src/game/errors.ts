@@ -9,8 +9,8 @@ export class RoomError extends Error {
       | "INVALID_PHASE"
       | "NOT_YOUR_TURN"
       | "PLAYER_NOT_FOUND",
-    message: string
+    message: string,
   ) {
-    super(message);
+    super(message)
   }
 }

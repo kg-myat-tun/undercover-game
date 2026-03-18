@@ -32,6 +32,12 @@ bun run dev:server
 bun run dev:web
 ```
 
+Or run the workspace dev pipeline with Turbo:
+
+```bash
+bun run dev
+```
+
 ## Environment
 
 ### Server
@@ -52,3 +58,10 @@ bun run dev:web
 ```bash
 bun run test
 ```
+
+## Tooling
+
+- `bun run build`: build the monorepo through Turborepo
+- `bun run lint`: run package-level Biome checks through Turborepo
+- `bun run format`: format the repo with Biome
+- `bun run format:check`: verify formatting without writing changes

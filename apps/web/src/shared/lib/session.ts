@@ -1,25 +1,25 @@
-const PREFIX = "undercover-session";
+const PREFIX = "undercover-session"
 
 export function getStoredSession(roomCode: string): string | null {
   if (typeof window === "undefined") {
-    return null;
+    return null
   }
 
-  return window.localStorage.getItem(`${PREFIX}:${roomCode.toUpperCase()}`);
+  return window.localStorage.getItem(`${PREFIX}:${roomCode.toUpperCase()}`)
 }
 
 export function storeSession(roomCode: string, playerSessionId: string) {
   if (typeof window === "undefined") {
-    return;
+    return
   }
 
-  window.localStorage.setItem(`${PREFIX}:${roomCode.toUpperCase()}`, playerSessionId);
+  window.localStorage.setItem(`${PREFIX}:${roomCode.toUpperCase()}`, playerSessionId)
 }
 
 export function clearStoredSession(roomCode: string) {
   if (typeof window === "undefined") {
-    return;
+    return
   }
 
-  window.localStorage.removeItem(`${PREFIX}:${roomCode.toUpperCase()}`);
+  window.localStorage.removeItem(`${PREFIX}:${roomCode.toUpperCase()}`)
 }

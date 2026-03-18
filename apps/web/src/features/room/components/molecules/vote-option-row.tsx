@@ -1,20 +1,14 @@
-import React from "react";
+import React from "react"
 
 type VoteOptionRowProps = {
-  checked: boolean;
-  disabled: boolean;
-  label: string;
-  hint?: string | null;
-  onChange: () => void;
-};
+  checked: boolean
+  disabled: boolean
+  label: string
+  hint?: string | null
+  onChange: () => void
+}
 
-export function VoteOptionRow({
-  checked,
-  disabled,
-  label,
-  hint,
-  onChange
-}: VoteOptionRowProps) {
+export function VoteOptionRow({ checked, disabled, label, hint, onChange }: VoteOptionRowProps) {
   return (
     <label
       className={`flex cursor-pointer items-center justify-between rounded-xl border px-4 py-2.5 transition ${
@@ -27,5 +21,5 @@ export function VoteOptionRow({
       </div>
       <input type="radio" name="vote" checked={checked} disabled={disabled} onChange={onChange} />
     </label>
-  );
+  )
 }

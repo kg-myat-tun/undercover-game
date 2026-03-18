@@ -1,20 +1,20 @@
-import React from "react";
+import React from "react"
 
-import { t } from "../../../../shared/lib/i18n";
-import type { AppLocale } from "../../../../shared/lib/locale";
+import { t } from "../../../../shared/lib/i18n"
+import type { AppLocale } from "../../../../shared/lib/locale"
 
 type PlayerStatusRowProps = {
-  isConnected: boolean;
-  isCurrentTurn: boolean;
-  isEliminated: boolean;
-  isActive: boolean;
-  isHost: boolean;
-  isSelf: boolean;
-  locale: AppLocale;
-  nickname: string;
-  onKick?: () => void;
-  canKick?: boolean;
-};
+  isConnected: boolean
+  isCurrentTurn: boolean
+  isEliminated: boolean
+  isActive: boolean
+  isHost: boolean
+  isSelf: boolean
+  locale: AppLocale
+  nickname: string
+  onKick?: () => void
+  canKick?: boolean
+}
 
 export function PlayerStatusRow({
   isConnected,
@@ -26,7 +26,7 @@ export function PlayerStatusRow({
   locale,
   nickname,
   onKick,
-  canKick
+  canKick,
 }: PlayerStatusRowProps) {
   const status = isCurrentTurn
     ? t(locale, "currentTurn")
@@ -36,7 +36,7 @@ export function PlayerStatusRow({
         ? t(locale, "disconnected")
         : isActive
           ? t(locale, "active")
-          : "";
+          : ""
 
   return (
     <div className="flex items-center justify-between rounded-xl bg-black/[0.03] px-3 py-2.5">
@@ -51,6 +51,7 @@ export function PlayerStatusRow({
       <div className="flex items-center gap-3">
         {canKick ? (
           <button
+            type="button"
             onClick={onKick}
             className="rounded-lg border border-black/10 px-3 py-1.5 text-sm font-semibold"
           >
@@ -60,5 +61,5 @@ export function PlayerStatusRow({
         <span className={`h-3 w-3 rounded-full ${isConnected ? "bg-mint" : "bg-accent"}`} />
       </div>
     </div>
-  );
+  )
 }

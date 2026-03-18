@@ -1,7 +1,7 @@
-import type { Player, PublicRoom, RoundState, Room } from "./schemas.js";
+import type { Player, PublicRoom, Room, RoundState } from "./schemas.js"
 
 function safeCounter(value: number | undefined, fallback: number): number {
-  return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+  return typeof value === "number" && Number.isFinite(value) ? value : fallback
 }
 
 export function createEmptyRound(): RoundState {
@@ -18,17 +18,17 @@ export function createEmptyRound(): RoundState {
     undercoverPlayerId: null,
     civilianWord: null,
     undercoverWord: null,
-    outcome: null
-  };
+    outcome: null,
+  }
 }
 
 export function getActivePlayers(room: Room): Player[] {
   if (room.round.phase === "lobby") {
-    return room.players;
+    return room.players
   }
 
-  const activeSet = new Set(room.round.activePlayerIds);
-  return room.players.filter((player) => activeSet.has(player.id));
+  const activeSet = new Set(room.round.activePlayerIds)
+  return room.players.filter((player) => activeSet.has(player.id))
 }
 
 export function toPublicRoom(room: Room): PublicRoom {
@@ -46,12 +46,12 @@ export function toPublicRoom(room: Room): PublicRoom {
       eliminatedPlayerId: room.round.eliminatedPlayerId,
       resolutionReason: room.round.resolutionReason,
       revealedUndercoverPlayerId:
-        room.round.phase === "results" ? room.round.undercoverPlayerId ?? null : null,
-      outcome: room.round.outcome
-    }
-  };
+        room.round.phase === "results" ? (room.round.undercoverPlayerId ?? null) : null,
+      outcome: room.round.outcome,
+    },
+  }
 }
 
 export function getSafeCounter(value: number | undefined, fallback: number): number {
-  return safeCounter(value, fallback);
+  return safeCounter(value, fallback)
 }

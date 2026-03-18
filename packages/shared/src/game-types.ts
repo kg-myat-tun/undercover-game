@@ -1,1 +1,1 @@
-export type Role = "civilian" | "undercover";
+export type Role = "civilian" | "undercover"

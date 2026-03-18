@@ -1,11 +1,11 @@
-import { RoomClient } from "../../../features/room/room-client";
+import { RoomClient } from "../../../features/room/room-client"
 
 export default async function RoomPage({
-  params
+  params,
 }: {
-  params: Promise<{ code: string }>;
+  params: Promise<{ code: string }>
 }) {
-  const { code } = await params;
+  const { code } = await params
 
-  return <RoomClient roomCode={code.toUpperCase()} />;
+  return <RoomClient roomCode={code.toUpperCase()} />
 }
