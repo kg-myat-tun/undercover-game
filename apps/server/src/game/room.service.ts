@@ -28,7 +28,7 @@ import {
 
 import { ROOM_STORE, type RoomStore } from "../redis/room-store.js"
 import { RoomError } from "./errors.js"
-import type { RoomQueryService } from "./room-query.service.js"
+import { RoomQueryService } from "./room-query.service.js"
 
 const MIN_PLAYERS = 3
 const MAX_PLAYERS = 8

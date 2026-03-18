@@ -1,7 +1,7 @@
 import { Controller, Get, Param } from "@nestjs/common"
 import { getWordPack, wordPacks } from "@undercover/shared"
 
-import type { RoomQueryService } from "./game/room-query.service.js"
+import { RoomQueryService } from "./game/room-query.service.js"
 
 @Controller()
 export class RoomController {

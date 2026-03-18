@@ -27,8 +27,8 @@ import type { Server, Socket } from "socket.io"
 import { ZodError } from "zod"
 
 import { RoomError } from "../game/errors.js"
-import type { RoomService } from "../game/room.service.js"
-import type { RoomQueryService } from "../game/room-query.service.js"
+import { RoomQueryService } from "../game/room-query.service.js"
+import { RoomService } from "../game/room.service.js"
 
 type RoomSocket = Socket<ClientToServerEvents, ServerToClientEvents> & {
   data: {
