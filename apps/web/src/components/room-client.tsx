@@ -1,6 +1,7 @@
 "use client";
 
 import type { PublicRoom, Role } from "@undercover/shared";
+import React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
