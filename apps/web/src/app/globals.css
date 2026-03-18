@@ -14,6 +14,33 @@ body {
     linear-gradient(180deg, #f4eadb 0%, #eadcc7 100%);
 }
 
+.lang-my {
+  font-family:
+    var(--font-myanmar),
+    "Myanmar Text",
+    "Myanmar Sangam MN",
+    "Nirmala UI",
+    sans-serif;
+  font-feature-settings: "liga" 1, "clig" 1;
+}
+
+.lang-my .font-display {
+  font-family: inherit;
+}
+
+.lang-my h1,
+.lang-my h2,
+.lang-my h3 {
+  letter-spacing: 0;
+}
+
+.lang-my input,
+.lang-my select,
+.lang-my button,
+.lang-my textarea {
+  font-family: inherit;
+}
+
 input::placeholder {
   color: rgba(22, 32, 37, 0.4);
 }
